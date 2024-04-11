@@ -1,15 +1,11 @@
 export const routes = [
   {
     path: '/',
-    redirect: '/pad/control',
+    redirect: '/demo/index',
   },
   {
-    path: '/pad/control',
-    component: () => import('@/pages/Pad/index.vue'),
-  },
-  {
-    path: '/pc/control',
-    component: () => import('@/pages/PC/index.vue'),
+    path: '/demo/index',
+    component: () => import('@/pages/Demo/index.vue'),
   },
   {
     path: '/home',

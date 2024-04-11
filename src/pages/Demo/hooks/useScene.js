@@ -2,8 +2,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import Stats from 'three/examples/jsm/libs/stats.module.js'
 import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from 'three-mesh-bvh'
-import { loadOBJ } from '@/utils/loaders'
-import { onMounted, onBeforeUnmount } from 'vue'
+import { loadOBJ, loadPLY } from '@/utils/loaders'
 
 // 加速射线检测的重中之重
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree
@@ -18,6 +17,53 @@ const loadHead = async () => {
   return mesh
 }
 
+const vertexShader = `
+  varying vec3 vNormal;
+  varying vec3 vPositionNormal;
+  void main() 
+  {
+    vNormal = normalize( normalMatrix * normal ); // 转换到视图空间
+    vPositionNormal = normalize(( modelViewMatrix * vec4(position, 1.0) ).xyz);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+  }
+`
+
+const fragmentShader = `
+  uniform vec3 glowColor;
+  uniform float b;
+  uniform float p;
+  uniform float s;
+  varying vec3 vNormal;
+  varying vec3 vPositionNormal;
+  void main() 
+  {
+    float a = pow( b + s * abs(dot(vNormal, vPositionNormal)), p );
+    gl_FragColor = vec4( glowColor, a );
+  }
+`
+
+const brainMaskMaterial = new THREE.ShaderMaterial({
+  uniforms: {
+    s: { type: 'f', value: -1.0 },
+    b: { type: 'f', value: 0.5 },
+    p: { type: 'f', value: 1.0 },
+    glowColor: { type: 'c', value: new THREE.Color(0x00ffff) },
+  },
+  vertexShader: vertexShader,
+  fragmentShader: fragmentShader,
+  side: THREE.FrontSide,
+  blending: THREE.AdditiveBlending,
+  transparent: false,
+})
+
+const loadBrainMask = async () => {
+  const branMaskUrl = new URL('../../../assets/model/brain.ply', import.meta.url).href
+  const branMask = await loadPLY(branMaskUrl)
+  const mesh = new THREE.Mesh(branMask, brainMaskMaterial)
+  mesh.rotateX(Math.PI / -2)
+  return mesh
+}
+
 const mainSceneDefaultConfig = {
   /**场景背景颜色 */
   backgroundColor: 0x465265,
@@ -28,7 +74,7 @@ const mainSceneDefaultConfig = {
   /**显示帧数 */
   showFrameRate: false,
   /**显示坐标轴 */
-  showAxes: false,
+  showAxes: true,
   /**全局光照强度 */
   lightStrength: 1,
 }
@@ -79,6 +125,21 @@ const renderMainScene = (selector, config) => {
   renderer.setPixelRatio(window.devicePixelRatio)
   renderer.setSize(renderWidth, renderHeight)
   dom.appendChild(renderer.domElement)
+  // 环境光+点光源
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.1)
+  scene.add(ambientLight)
+  const light1 = new THREE.DirectionalLight(0xffffff, currentConfig.lightStrength)
+  light1.position.set(0, currentConfig.screenDistance, 0)
+  const light2 = new THREE.DirectionalLight(0xffffff, currentConfig.lightStrength)
+  light2.position.set(0, -currentConfig.screenDistance, 0)
+  const light3 = new THREE.DirectionalLight(0xffffff, currentConfig.lightStrength)
+  light1.position.set(0, 0, currentConfig.screenDistance)
+  const light4 = new THREE.DirectionalLight(0xffffff, currentConfig.lightStrength)
+  light2.position.set(0, 0, -currentConfig.screenDistance)
+  scene.add(light1)
+  scene.add(light2)
+  scene.add(light3)
+  scene.add(light4)
   // controls
   controls = new OrbitControls(camera, renderer.domElement)
   // 帧率调试
@@ -157,7 +218,6 @@ const renderSmallScene = selector => {
   updateSize()
   // 场景
   scene = new THREE.Scene()
-  scene.background = new THREE.Color(currentConfig.backgroundColor)
   // 相机
   camera = new THREE.PerspectiveCamera(75, renderWidth / renderHeight, 1, currentConfig.cameraFar)
   scene.add(camera)
@@ -167,8 +227,9 @@ const renderSmallScene = selector => {
   renderer = new THREE.WebGLRenderer({ logarithmicDepthBuffer: true, antialias: true, alpha: true })
   renderer.setPixelRatio(window.devicePixelRatio)
   renderer.setSize(renderWidth, renderHeight)
-  renderer.setClearAlpha(0)
   dom.appendChild(renderer.domElement)
+  renderer.setClearAlpha(0)
+
   // 环境光+平行光，让phong材质呈石膏白色
   const ambientLight = new THREE.AmbientLight(0x7a7a7a, currentConfig.screenDistance)
   scene.add(ambientLight)
@@ -246,24 +307,22 @@ export const changeHeadSide = (mainCamera, assistCamera, assistScreenDistance) =
 export default (mainSelector, smallSelector, config) => {
   return new Promise((resolve, reject) => {
     let mainSceneManager, smallSceneManager
-    onBeforeUnmount(() => {
-      mainSceneManager && mainSceneManager.destory()
-    })
-    onMounted(() => {
-      try {
-        mainSceneManager = renderMainScene(mainSelector, config)
-        mainSceneManager.anim()
-        smallSceneManager = renderSmallScene(smallSelector)
-        smallSceneManager.anim()
-        loadHead().then(headMesh => {
-          smallSceneManager.scene.add(headMesh)
-        })
-        const { controls, camera } = mainSceneManager
-        syncSceneRotate(controls, camera, smallSceneManager.camera, smallSceneDefaultConfig.screenDistance)
-        resolve(mainSceneManager)
-      } catch (error) {
-        reject(error)
-      }
-    })
+    try {
+      mainSceneManager = renderMainScene(mainSelector, config)
+      mainSceneManager.anim()
+      smallSceneManager = renderSmallScene(smallSelector)
+      smallSceneManager.anim()
+      loadHead().then(headMesh => {
+        smallSceneManager.scene.add(headMesh)
+      })
+      // loadBrainMask().then(brainMask => {
+      //   mainSceneManager.scene.add(brainMask)
+      // })
+      const { controls, camera } = mainSceneManager
+      syncSceneRotate(controls, camera, smallSceneManager.camera, smallSceneDefaultConfig.screenDistance)
+      resolve(mainSceneManager)
+    } catch (error) {
+      reject(error)
+    }
   })
 }
