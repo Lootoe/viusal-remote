@@ -8,6 +8,10 @@ export const routes = [
     component: () => import('@/pages/Pad/index.vue'),
   },
   {
+    path: '/pc/control',
+    component: () => import('@/pages/PC/index.vue'),
+  },
+  {
     path: '/home',
     component: () => import('@/pages/Home.vue'),
   },
