@@ -107,7 +107,7 @@ const changeNucleusVisible = (item, side) => {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0.14rem 0.18rem;
+      padding: 0.16rem 0.18rem;
       border-top: 0.01rem solid rgba(49, 55, 70, 1);
       &__left {
         margin-right: 0.2rem;
