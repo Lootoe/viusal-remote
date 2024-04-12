@@ -45,8 +45,8 @@ const fragmentShader = `
 const brainMaskMaterial = new THREE.ShaderMaterial({
   uniforms: {
     s: { type: 'f', value: -1.0 },
-    b: { type: 'f', value: 0.5 },
-    p: { type: 'f', value: 1.0 },
+    b: { type: 'f', value: 0.8 },
+    p: { type: 'f', value: 4.0 },
     glowColor: { type: 'c', value: new THREE.Color(0x00ffff) },
   },
   vertexShader: vertexShader,
@@ -57,10 +57,11 @@ const brainMaskMaterial = new THREE.ShaderMaterial({
 })
 
 const loadBrainMask = async () => {
-  const branMaskUrl = new URL('../../../assets/model/brain.ply', import.meta.url).href
+  const branMaskUrl = new URL('../../../assets/model/eddy_mask.ply', import.meta.url).href
   const branMask = await loadPLY(branMaskUrl)
   const mesh = new THREE.Mesh(branMask, brainMaskMaterial)
-  mesh.rotateX(Math.PI / -2)
+  mesh.rotation.x = Math.PI / -2
+  mesh.rotation.z = Math.PI
   return mesh
 }
 
