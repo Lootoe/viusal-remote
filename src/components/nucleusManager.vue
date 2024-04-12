@@ -132,8 +132,8 @@ const changeNucleusVisible = (item, side) => {
           justify-content: center;
           align-items: center;
           img {
-            width: 0.2rem;
-            height: 0.2rem;
+            width: 0.24rem;
+            height: 0.24rem;
           }
         }
       }
