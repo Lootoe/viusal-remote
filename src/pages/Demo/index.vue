@@ -1,8 +1,8 @@
 <script setup>
 import useScene from './hooks/useScene'
 import { useNucleus, changeNucleusColor, changeNucleusVisible } from './hooks/useNucleus'
-let nucleusMeshes = {}
-let nucleusList = ref({})
+let nucleusMeshes = []
+let nucleusList = ref([])
 onMounted(() => {
   let sceneManager
   useScene('.main-scene', '.small-scene', {})
@@ -12,10 +12,11 @@ onMounted(() => {
     })
     .then(data => {
       nucleusList.value = data.nucleusList
+      console.log('用于显示的核团列表', data.nucleusList)
       nucleusMeshes = data.nucleusMeshes
+      console.log('用于追踪的核团列表', nucleusMeshes)
       Object.values(nucleusMeshes).forEach(item => {
-        sceneManager.scene.add(item.left.mesh)
-        sceneManager.scene.add(item.right.mesh)
+        sceneManager.scene.add(item.mesh)
       })
     })
     .catch(err => {
@@ -31,7 +32,7 @@ onMounted(() => {
       @colorChanged="changeNucleusColor"
       @visibleChanged="changeNucleusVisible"
     ></nucleus-manager>
-    <traverse-manager class="traverse-manager"></traverse-manager>
+    <traverse-manager class="traverse-manager" :nucleusList="nucleusMeshes"></traverse-manager>
     <div class="small-scene"></div>
   </div>
 </template>

@@ -1,9 +1,56 @@
 <script setup>
+import { computed, watch } from 'vue'
 defineOptions({
   name: 'traverseManager',
 })
-const singleItem = ref(true)
-const selecedItem = ref(true)
+const props = defineProps({
+  nucleusList: {
+    type: Array,
+    required: true,
+  },
+  // chipList: {
+  //   type: Array,
+  //   required: true,
+  // },
+})
+const localNucleusList = ref([])
+watch(
+  () => props.nucleusList,
+  newv => {
+    const keys = Object.values(newv)
+    const arr = []
+    keys.forEach(v => {
+      const prefix = v.side === 'left' ? 'L-' : 'R-'
+      const obj = {
+        name: v.name,
+        factor: prefix + v.name,
+        text: prefix + v.text,
+        selected: false,
+      }
+      arr.push(obj)
+    })
+    localNucleusList.value = arr
+  }
+)
+// 是否单一选中项
+const isSingle = ref(true)
+// 是否有选中项
+const hasSeleced = ref(false)
+const selectItem = item => {
+  item.selected = !item.selected
+  // 判断有没有选中项
+  const selectedArr = localNucleusList.value.filter(v => v.selected)
+  console.log('selectedArr.length', selectedArr.length)
+  hasSeleced.value = selectedArr.length > 0
+  isSingle.value = selectedArr.length <= 1
+}
+const resetAll = () => {
+  localNucleusList.value.forEach(v => {
+    v.selected = false
+    isSingle.value = true
+    hasSeleced.value = false
+  })
+}
 </script>
 
 <template>
@@ -14,23 +61,39 @@ const selecedItem = ref(true)
           <div class="section">
             <div class="section__title">核团</div>
             <div class="section__list">
-              <div class="section__item" v-for="index in 8" :key="index">GPi（苍白球内侧）</div>
+              <div
+                class="section__item"
+                v-for="(item, index) in localNucleusList"
+                :key="index"
+                :class="{ active: item.selected }"
+                @click="selectItem(item)"
+              >
+                {{ item.text }}
+              </div>
             </div>
           </div>
           <div class="section">
             <div class="section__title">电极</div>
             <div class="section__list">
-              <div class="section__item active" v-for="index in 8" :key="index">触点1</div>
+              <div
+                class="section__item"
+                v-for="(item, index) in localNucleusList"
+                :key="index"
+                :class="{ active: item.selected }"
+                @click="selectItem(item)"
+              >
+                {{ item.text }}
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="bottom" :class="{ active: selecedItem }">
+      <div class="bottom" :class="{ active: hasSeleced }">
         <div class="bottom__left">
-          <div class="btn">重选</div>
+          <div class="btn" @click="resetAll">重选</div>
         </div>
         <div class="bottom__right">
-          <template v-if="singleItem">
+          <template v-if="isSingle">
             <div class="btn">确定</div>
           </template>
           <template v-else>

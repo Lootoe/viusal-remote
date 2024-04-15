@@ -14,7 +14,7 @@ const urlList = [
 
 const nucleusEnum = {
   GPi: {
-    name: 'GPi',
+    factor: 'GPi',
     text: 'GPi（苍白球内侧）',
     color: 'rgba(239, 49, 28, 0.6)',
     visible: {
@@ -23,7 +23,7 @@ const nucleusEnum = {
     },
   },
   MFB: {
-    name: 'MFB',
+    factor: 'MFB',
     text: 'MFB（内侧前脑束）',
     color: 'rgba(244, 137, 31, 0.6)',
     visible: {
@@ -32,7 +32,7 @@ const nucleusEnum = {
     },
   },
   ANT: {
-    name: 'ANT',
+    factor: 'ANT',
     text: 'ANT（丘脑前核）',
     color: 'rgba(158, 17, 181, 0.6)',
     visible: {
@@ -41,7 +41,7 @@ const nucleusEnum = {
     },
   },
   ACC: {
-    name: 'ACC',
+    factor: 'ACC',
     text: 'ACC（前扣带回）',
     color: 'rgba(3, 199, 211, 0.6)',
     visible: {
@@ -50,7 +50,7 @@ const nucleusEnum = {
     },
   },
   AMG: {
-    name: 'AMG',
+    factor: 'AMG',
     text: 'AMG（杏仁核）',
     color: 'rgba(18, 155, 255, 0.6)',
     visible: {
@@ -59,7 +59,7 @@ const nucleusEnum = {
     },
   },
   ALIC: {
-    name: 'ALIC',
+    factor: 'ALIC',
     text: 'ALIC（内囊前肢）',
     color: 'rgba(17, 181, 33, 0.6)',
     visible: {
@@ -68,7 +68,7 @@ const nucleusEnum = {
     },
   },
   Caudate: {
-    name: 'Caudate',
+    factor: 'Caudate',
     text: 'Caudate（尾状体）',
     color: 'rgba(158, 17, 181, 0.6)',
     visible: {
@@ -77,7 +77,7 @@ const nucleusEnum = {
     },
   },
   Lenticula: {
-    name: 'Lenticula',
+    factor: 'Lenticula',
     text: 'Lenticula（晶状体）',
     color: 'rgba(239, 49, 28, 0.6)',
     visible: {
@@ -86,7 +86,7 @@ const nucleusEnum = {
     },
   },
   NAc: {
-    name: 'NAc',
+    factor: 'NAc',
     text: 'NAc（伏隔核）',
     color: 'rgba(18, 155, 255, 0.6)',
     visible: {
@@ -96,14 +96,14 @@ const nucleusEnum = {
   },
 }
 
-const nucleusMeshes = {}
+const nucleusMeshes = []
 const nucleusList = {}
 
 const loadNucleus = async obj => {
-  const { name, side, url } = obj
+  const { factor, url, side } = obj
   const nucleausUrl = new URL(`../../../assets/${url}`, import.meta.url).href
   const geometry = await loadPLY(nucleausUrl)
-  const { color, visible } = nucleusList[name]
+  const { color, visible } = nucleusList[factor]
   const { pureColor, alpha } = splitRGBA(color)
   const material = new THREE.MeshPhysicalMaterial({
     emissive: pureColor,
@@ -139,15 +139,6 @@ const splitRGBA = color => {
   return { pureColor: `rgb(${R},${G},${B})`, alpha }
 }
 
-const createModel = mesh => {
-  return {
-    mesh: mesh,
-    crossedFibers: [],
-    startFromFibers: [],
-    endWithFibers: [],
-  }
-}
-
 /**将URL拆分成`name`和`url` */
 const handleNucleusStep_1 = (urlList = []) => {
   return urlList.map(url => {
@@ -155,10 +146,12 @@ const handleNucleusStep_1 = (urlList = []) => {
     const strs_1 = url.split('/')
     const target = strs_1.pop()
     // 去除后缀
-    const strs_2 = target.split('.')[0]
+    // name是从文件里解析的原始昵称，是神经纤维追踪所需的昵称
+    const name = target.split('.')[0]
     // 区分左右
-    const [side, name] = strs_2.split('-')
-    return { name, side: side.toLowerCase(), url }
+    // factor是和图案显示所需要的文案
+    const [side, factor] = name.split('-')
+    return { name, factor, url, side: side.toLowerCase() }
   })
 }
 
@@ -166,11 +159,22 @@ const handleNucleusStep_1 = (urlList = []) => {
 const handleNucleusStep_2 = (nucleusStep1List = []) => {
   const keys = Object.keys(nucleusEnum)
   nucleusStep1List.forEach(obj => {
-    const { name } = obj
+    const { factor, name, side } = obj
     // 直接判断在Enum里命中了哪些核团
-    if (keys.includes(name)) {
-      nucleusList[name] = nucleusEnum[name]
-      nucleusMeshes[name] = { left: null, right: null }
+    if (keys.includes(factor)) {
+      const source = nucleusEnum[factor]
+      nucleusList[factor] = source
+      const model = {
+        name: name,
+        factor: factor,
+        text: source.text,
+        side: side,
+        mesh: null,
+        crossedFibers: [],
+        startFromFibers: [],
+        endWithFibers: [],
+      }
+      nucleusMeshes.push(model)
     }
   })
 }
@@ -184,9 +188,7 @@ const handleNucleusStep_3 = (nucleusStep1List = []) => {
     Promise.all(requests)
       .then(arr => {
         arr.forEach((nucleusMesh, index) => {
-          const obj = nucleusStep1List[index]
-          const { name, side } = obj
-          nucleusMeshes[name][side] = createModel(nucleusMesh)
+          nucleusMeshes[index].mesh = nucleusMesh
         })
         resolve({ nucleusMeshes, nucleusList })
       })
@@ -196,23 +198,19 @@ const handleNucleusStep_3 = (nucleusStep1List = []) => {
 
 export const changeNucleusColor = (...args) => {
   const [nucleus, color] = args
-  const { name } = nucleus
-  nucleusList[name].color = color
-  const { left, right } = nucleusMeshes[name]
-  const { pureColor, alpha } = splitRGBA(color)
-  if (left && right) {
-    left.mesh.material.emissive = new THREE.Color(pureColor)
-    right.mesh.material.emissive = new THREE.Color(pureColor)
-    left.mesh.material.opacity = alpha
-    right.mesh.material.opacity = alpha
-  }
+  nucleusList[nucleus.factor].color = color
+  const targets = nucleusMeshes.filter(v => v.factor === nucleus.factor)
+  targets.forEach(v => {
+    const { pureColor, alpha } = splitRGBA(color)
+    v.mesh.material.emissive = new THREE.Color(pureColor)
+    v.mesh.material.opacity = alpha
+  })
 }
 
 export const changeNucleusVisible = (...args) => {
   const [nucleus, side] = args
-  const { name } = nucleus
-  nucleusList[name].visible = nucleus.visible
-  const targetMesh = nucleusMeshes[name][side]
+  nucleusList[nucleus.factor].visible = nucleus.visible
+  const targetMesh = nucleusMeshes.find(v => v.factor === nucleus.factor)
   if (targetMesh) {
     targetMesh.mesh.visible = nucleus.visible[side]
   }
