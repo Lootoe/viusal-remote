@@ -1,5 +1,5 @@
 <script setup>
-import { computed, watch } from 'vue'
+import { watch } from 'vue'
 defineOptions({
   name: 'traverseManager',
 })
@@ -30,7 +30,8 @@ watch(
       arr.push(obj)
     })
     localNucleusList.value = arr
-  }
+  },
+  { immediate: true }
 )
 // 是否单一选中项
 const isSingle = ref(true)
@@ -40,7 +41,6 @@ const selectItem = item => {
   item.selected = !item.selected
   // 判断有没有选中项
   const selectedArr = localNucleusList.value.filter(v => v.selected)
-  console.log('selectedArr.length', selectedArr.length)
   hasSeleced.value = selectedArr.length > 0
   isSingle.value = selectedArr.length <= 1
 }
