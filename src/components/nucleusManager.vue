@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue'
 defineOptions({
   name: 'nucleusManager',
 })
@@ -13,7 +14,6 @@ const props = defineProps({
   },
 })
 const emits = defineEmits(['colorChanged', 'visibleChanged'])
-const predifineColors = Object.values(props.nucleusList).map(v => v.color)
 const changeNucleusColor = (item, color) => {
   emits('colorChanged', item, color)
 }
@@ -21,6 +21,9 @@ const changeNucleusVisible = (item, side) => {
   item.visible[side] = !item.visible[side]
   emits('visibleChanged', item, side)
 }
+const predifineColors = computed(() => {
+  return Object.values(props.nucleusList).map(v => v.color)
+})
 </script>
 
 // !TODO:需要区分环境来判断使用什么颜色

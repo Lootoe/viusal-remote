@@ -31,6 +31,7 @@ onMounted(() => {
       @colorChanged="changeNucleusColor"
       @visibleChanged="changeNucleusVisible"
     ></nucleus-manager>
+    <traverse-manager class="traverse-manager"></traverse-manager>
     <div class="small-scene"></div>
   </div>
 </template>
@@ -51,6 +52,11 @@ onMounted(() => {
 .nucleus-manager {
   position: absolute;
   top: 0.36rem;
+  left: 0.36rem;
+}
+.traverse-manager {
+  position: absolute;
+  bottom: 0.36rem;
   left: 0.36rem;
 }
 </style>
