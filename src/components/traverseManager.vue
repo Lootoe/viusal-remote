@@ -138,7 +138,7 @@ const resetAll = () => {
           margin-bottom: 0.18rem;
         }
         .section__list {
-          width: 4.2rem;
+          width: 4.6rem;
           display: flex;
           flex-wrap: wrap;
           justify-content: space-between;
