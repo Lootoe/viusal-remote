@@ -1,15 +1,15 @@
 import * as THREE from 'three'
-import { loadPLY } from '@/utils/loaders'
+import { renderNucleus } from '@/libs/renderNucleus'
 
 const urlList = [
-  'optionalModels/nucleus/Left-Caudate.ply',
-  'optionalModels/nucleus/Left-Lenticula.ply',
-  'optionalModels/nucleus/Left-NAc.ply',
-  'optionalModels/nucleus/Left-ALIC.ply',
-  'optionalModels/nucleus/Right-Caudate.ply',
-  'optionalModels/nucleus/Right-Lenticula.ply',
-  'optionalModels/nucleus/Right-NAc.ply',
-  'optionalModels/nucleus/Right-ALIC.ply',
+  '../../../assets/optionalModels/nucleus/Left-Caudate.ply',
+  '../../../assets/optionalModels/nucleus/Left-Lenticula.ply',
+  '../../../assets/optionalModels/nucleus/Left-NAc.ply',
+  '../../../assets/optionalModels/nucleus/Left-ALIC.ply',
+  '../../../assets/optionalModels/nucleus/Right-Caudate.ply',
+  '../../../assets/optionalModels/nucleus/Right-Lenticula.ply',
+  '../../../assets/optionalModels/nucleus/Right-NAc.ply',
+  '../../../assets/optionalModels/nucleus/Right-ALIC.ply',
 ]
 
 const nucleusEnum = {
@@ -99,33 +99,6 @@ const nucleusEnum = {
 const nucleusMeshes = []
 const nucleusList = {}
 
-const loadNucleus = async obj => {
-  const { factor, url, side } = obj
-  const nucleausUrl = new URL(`../../../assets/${url}`, import.meta.url).href
-  const geometry = await loadPLY(nucleausUrl)
-  const { color, visible } = nucleusList[factor]
-  const { pureColor, alpha } = splitRGBA(color)
-  const material = new THREE.MeshPhysicalMaterial({
-    emissive: pureColor,
-    transparent: true,
-    opacity: alpha,
-    depthTest: true,
-    side: THREE.DoubleSide,
-    roughness: 1,
-    clearcoat: 0.1,
-  })
-  const mesh = new THREE.Mesh(geometry, material)
-  // 性能提升重中之重，构建BVH树
-  mesh.geometry.computeBoundsTree()
-  mesh.rotation.x = Math.PI / -2
-  mesh.rotation.z = Math.PI
-  mesh.geometry.computeBoundingBox()
-  mesh.updateWorldMatrix(true, true)
-  mesh.geometry.boundingBox.applyMatrix4(mesh.matrixWorld)
-  mesh.visible = visible[side]
-  return mesh
-}
-
 const splitRGBA = color => {
   // 提取单纯的RGB和Alpha
   // 因为emissive不支持alpha，需要设置opacity
@@ -183,12 +156,18 @@ const handleNucleusStep_2 = (nucleusStep1List = []) => {
 const handleNucleusStep_3 = (nucleusStep1List = []) => {
   return new Promise((resolve, reject) => {
     const requests = nucleusStep1List.map(obj => {
-      return loadNucleus(obj)
+      const { factor, url } = obj
+      const nucleausUrl = new URL(url, import.meta.url).href
+      const { color } = nucleusList[factor]
+      const { pureColor, alpha } = splitRGBA(color)
+      return renderNucleus(nucleausUrl, pureColor, alpha)
     })
     Promise.all(requests)
       .then(arr => {
         arr.forEach((nucleusMesh, index) => {
-          nucleusMeshes[index].mesh = nucleusMesh
+          const obj = nucleusMeshes[index]
+          obj.mesh = nucleusMesh
+          obj.mesh.visible = nucleusList[obj.factor].visible[obj.side]
         })
         resolve({ nucleusMeshes, nucleusList })
       })

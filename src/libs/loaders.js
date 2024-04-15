@@ -36,7 +36,8 @@ export const loadPLY = url => {
   })
 }
 
-const loadFile = url => {
+/**加载文件 */
+export const loadFile = url => {
   return new Promise((resolve, reject) => {
     const fileloadr = new THREE.FileLoader()
     THREE.Cache.enabled = true
@@ -48,11 +49,5 @@ const loadFile = url => {
       null,
       reject
     )
-  })
-}
-
-export const loadLeadConfig = url => {
-  return loadFile(url).then(data => {
-    return data
   })
 }

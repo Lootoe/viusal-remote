@@ -1,11 +1,12 @@
 <script setup>
 import useScene from './hooks/useScene'
 import { useNucleus, changeNucleusColor, changeNucleusVisible } from './hooks/useNucleus'
+import { useChips } from './hooks/useChips'
 let nucleusMeshes = []
 let nucleusList = ref([])
 onMounted(() => {
   let sceneManager
-  useScene('.main-scene', '.small-scene', {})
+  useScene('.main-scene', '.small-scene', { backgroundColor: '#232A3B' })
     .then(data => {
       sceneManager = data
       return useNucleus()
@@ -19,11 +20,20 @@ onMounted(() => {
         sceneManager.scene.add(item.mesh)
       })
     })
+    .then(() => {
+      return useChips()
+    })
+    .then(leads => {
+      Object.values(leads).forEach(lead => {
+        sceneManager.scene.add(lead.mesh)
+      })
+    })
     .catch(err => {
       console.log('err', err)
     })
 })
 </script>
+
 <template>
   <div class="main-scene">
     <nucleus-manager
