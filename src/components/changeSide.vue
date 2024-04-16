@@ -103,9 +103,6 @@ const changeSide = item => {
     cursor: pointer;
     padding: 0.1rem 0.2rem;
     transition: all 0.3s;
-    &:hover {
-      background-color: rgba(122, 192, 199, 0.7);
-    }
     .face-img {
       width: 0.88rem;
       height: 0.88rem;
