@@ -60,7 +60,7 @@ const isSingle = ref(true)
 // 是否有选中项
 const hasSeleced = ref(false)
 // 弹框是否收起
-const showModal = ref(true)
+const showModal = ref(false)
 // 是否展示重置按钮
 const showReset = ref(false)
 const selectItem = item => {
