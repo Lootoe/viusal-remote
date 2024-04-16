@@ -13,8 +13,8 @@ const props = defineProps({
   },
 })
 const emits = defineEmits(['traverse', 'reset'])
-const localNucleusList = shallowRef([])
-const localLeadList = shallowRef([])
+const localNucleusList = ref([])
+const localLeadList = ref([])
 watch(
   () => props.nucleusList,
   newv => {
