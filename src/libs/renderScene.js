@@ -48,7 +48,7 @@ const brainMaskMaterial = new THREE.ShaderMaterial({
   transparent: false,
 })
 
-const loadBrainMask = async () => {
+export const loadBrainMask = async () => {
   const branMaskUrl = new URL('../../../assets/model/eddy_mask.ply', import.meta.url).href
   const branMask = await loadPLY(branMaskUrl)
   const mesh = new THREE.Mesh(branMask, brainMaskMaterial)

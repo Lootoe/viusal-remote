@@ -7,8 +7,4 @@ export const routes = [
     path: '/demo/index',
     component: () => import('@/pages/Demo/index.vue'),
   },
-  {
-    path: '/home',
-    component: () => import('@/pages/Home.vue'),
-  },
 ]

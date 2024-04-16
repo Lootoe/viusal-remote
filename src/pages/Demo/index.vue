@@ -3,8 +3,9 @@ import { useScene, changeCameraSide, addMesh, addMeshes } from './hooks/useScene
 import { useNucleus, changeNucleusColor, changeNucleusVisible } from './hooks/useNucleus'
 import { useChips } from './hooks/useChips'
 
-let nucleusMeshes = []
 let nucleusList = ref([])
+let nucleusMeshes = shallowRef([])
+let leadList = shallowRef([])
 
 onMounted(() => {
   useScene('.main-scene', '.small-scene', { backgroundColor: '#232A3B' })
@@ -14,19 +15,20 @@ onMounted(() => {
     .then(data => {
       nucleusList.value = data.nucleusList
       console.log('用于显示的核团列表', data.nucleusList)
-      nucleusMeshes = data.nucleusMeshes
-      console.log('用于追踪的核团列表', nucleusMeshes)
-      addMeshes(Object.values(nucleusMeshes).map(v => v.mesh))
+      nucleusMeshes.value = data.nucleusMeshes
+      console.log('用于追踪的核团列表', data.nucleusMeshes)
+      addMeshes(Object.values(nucleusMeshes.value).map(v => v.mesh))
     })
     .then(() => {
       return useChips()
     })
     .then(leads => {
       console.log('最终渲染的电极列表', leads)
-      Object.values(leads).forEach(lead => {
+      leads.forEach(lead => {
         addMesh(lead.pole)
-        addMeshes(lead.chips)
+        addMeshes(lead.chips.map(v => v.mesh))
       })
+      leadList.value = leads
     })
     .catch(err => {
       console.log('err', err)
@@ -42,7 +44,7 @@ onMounted(() => {
       @colorChanged="changeNucleusColor"
       @visibleChanged="changeNucleusVisible"
     ></nucleus-manager>
-    <traverse-manager class="traverse-manager" :nucleusList="nucleusMeshes"></traverse-manager>
+    <traverse-manager class="traverse-manager" :nucleusList="nucleusMeshes" :leadList="leadList"></traverse-manager>
     <change-side class="change-side" @changeSide="changeCameraSide"></change-side>
     <div class="small-scene"></div>
   </div>

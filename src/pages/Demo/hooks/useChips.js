@@ -148,8 +148,22 @@ const createLead = leadName => {
     leadPoints: [],
     pole: null,
     chips: [],
+    electrics: [],
   }
   leads[leadName] = lead
+}
+
+const createChip = (lead, chips) => {
+  const arr = chips.map(v => {
+    return {
+      name: 'c_' + v.name,
+      text: '触点' + v.name,
+      mesh: v,
+      status: 0,
+      index: v.name,
+    }
+  })
+  lead.chips = arr
 }
 
 /**将PAD传递的参数转换为3D实际需要的参数 */
@@ -235,7 +249,7 @@ const handleChipStep_3 = (patientConfig, programs) => {
     const program = leadProgram.find(v => v.position === target.position)
     if (target) {
       const chips = renderCircleChips(lead.leadPoints, target.config, program)
-      lead.chips = chips
+      createChip(lead, chips)
     }
   })
 }
@@ -252,7 +266,8 @@ export const useChips = fileUrl => {
         console.log('文件加载的电极数据', leads)
         handleChipStep_2(leads)
         handleChipStep_3(testPatientConfig, testProgram)
-        resolve(leads)
+        const leadList = Object.values(leads)
+        resolve(leadList)
       })
       .catch(reject)
   })

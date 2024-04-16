@@ -96,8 +96,8 @@ const nucleusEnum = {
   },
 }
 
-const nucleusMeshes = []
-const nucleusList = {}
+let nucleusMeshes = []
+let nucleusList = {}
 
 const splitRGBA = color => {
   // 提取单纯的RGB和Alpha
@@ -197,6 +197,8 @@ export const changeNucleusVisible = (...args) => {
 
 export const useNucleus = () => {
   return new Promise((resolve, reject) => {
+    nucleusMeshes = []
+    nucleusList = {}
     const step1List = handleNucleusStep_1(urlList)
     handleNucleusStep_2(step1List)
     handleNucleusStep_3(step1List).then(resolve).catch(reject)

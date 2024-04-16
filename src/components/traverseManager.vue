@@ -8,12 +8,13 @@ const props = defineProps({
     type: Array,
     required: true,
   },
-  // chipList: {
-  //   type: Array,
-  //   required: true,
-  // },
+  leadList: {
+    type: Array,
+    required: true,
+  },
 })
 const localNucleusList = ref([])
+const localLeadList = ref([])
 watch(
   () => props.nucleusList,
   newv => {
@@ -23,7 +24,7 @@ watch(
       const prefix = v.side === 'left' ? 'L-' : 'R-'
       const obj = {
         name: v.name,
-        factor: prefix + v.name,
+        factor: prefix + v.factor,
         text: prefix + v.text,
         selected: false,
       }
@@ -33,23 +34,50 @@ watch(
   },
   { immediate: true }
 )
+watch(
+  () => props.leadList,
+  newv => {
+    const arr = []
+    newv.forEach(v => {
+      const { chips } = v
+      arr.push(...chips)
+    })
+    arr.sort((a, b) => a.index - b.index)
+    localLeadList.value = arr.map(v => {
+      return {
+        name: v.name,
+        factor: v.name,
+        text: v.text,
+        selected: false,
+      }
+    })
+  },
+  { immediate: true }
+)
+
 // 是否单一选中项
 const isSingle = ref(true)
 // 是否有选中项
 const hasSeleced = ref(false)
+
 const selectItem = item => {
   item.selected = !item.selected
   // 判断有没有选中项
-  const selectedArr = localNucleusList.value.filter(v => v.selected)
-  hasSeleced.value = selectedArr.length > 0
-  isSingle.value = selectedArr.length <= 1
+  const selectedArr_1 = localNucleusList.value.filter(v => v.selected)
+  const selectedArr_2 = localLeadList.value.filter(v => v.selected)
+  const selectedNum = selectedArr_1.length + selectedArr_2.length
+  hasSeleced.value = selectedNum > 0
+  isSingle.value = selectedNum <= 1
 }
 const resetAll = () => {
   localNucleusList.value.forEach(v => {
     v.selected = false
-    isSingle.value = true
-    hasSeleced.value = false
   })
+  localLeadList.value.forEach(v => {
+    v.selected = false
+  })
+  isSingle.value = true
+  hasSeleced.value = false
 }
 </script>
 
@@ -77,7 +105,7 @@ const resetAll = () => {
             <div class="section__list">
               <div
                 class="section__item"
-                v-for="(item, index) in localNucleusList"
+                v-for="(item, index) in localLeadList"
                 :key="index"
                 :class="{ active: item.selected }"
                 @click="selectItem(item)"
@@ -103,6 +131,7 @@ const resetAll = () => {
         </div>
       </div>
     </div>
+    <div class="btn-box"></div>
   </div>
 </template>
 
@@ -213,6 +242,8 @@ const resetAll = () => {
         }
       }
     }
+  }
+  .btn-box {
   }
 }
 </style>

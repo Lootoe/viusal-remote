@@ -154,16 +154,11 @@ export const renderCircleChips = (points, chipConfig, program) => {
     // 为电极定义额外数据
     const { nodes } = program
     const num = nodes[index].index
-    const extraData = {
-      // 带电状态0(不带电),1(正电),2(负电)
-      status: 0,
-      name: num,
-    }
     // mesh
     // 贴图的高度需要根据chipConfig来调整，防止文字被压扁
     const k = chipConfig.len / 3
     const mesh = new THREE.Mesh(geometry, createChipMaterial(400, 400 * k, num, 60))
-    mesh.extraData = extraData
+    mesh.name = num
     mesh.updateWorldMatrix(true, true)
     // 给电极片定位
     const centerPoint = new THREE.Vector3().lerpVectors(startPoint, endPoint, 0.5)
