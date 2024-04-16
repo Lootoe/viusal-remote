@@ -10,6 +10,39 @@ const poleMaterial = new THREE.MeshPhysicalMaterial({
   transparent: true,
 })
 
+const getElectricMaterial = color => {
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      ucolor: { value: new THREE.Color(color) },
+    },
+    vertexShader: `
+        varying vec3 vNormal;
+        varying vec3 vPositionNormal;
+        void main()
+        {
+            vPositionNormal = normalize(( modelViewMatrix * vec4(position, 1.0) ).xyz);
+            vNormal = normalize( normalMatrix * normal );
+            gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+        }
+      `,
+    fragmentShader: `
+        varying vec3 vNormal;
+        varying vec3 vPositionNormal;
+        uniform vec3 ucolor;
+        void main()
+        {
+          float intensity = pow( 0.01 - dot( vNormal, vPositionNormal ), 1.0 );
+          gl_FragColor = vec4( ucolor, 1 ) * intensity;
+        }
+      `,
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+    transparent: true,
+    depthTest: false,
+    depthWrite: false,
+  })
+}
+
 /** 根据触点坐标，添加导线首末坐标 */
 const adjustCurveMatrix = positions => {
   const curve = new THREE.CatmullRomCurve3(positions)
@@ -173,7 +206,52 @@ export const renderCircleChips = (points, chipConfig, program) => {
     // 还要绕导线的方向旋转PI
     mesh.rotateOnWorldAxis(direction.normalize(), Math.PI)
     geometry.boundingBox.applyMatrix4(mesh.matrixWorld)
+    const extraData = {
+      center: centerPoint,
+      quaternion: quaternion,
+    }
+    mesh.extraData = extraData
     return mesh
   })
   return chipArr
+}
+
+export const renderElectric = (chip, program) => {
+  const chipConfig = chip.config
+  const { center, quaternion } = chip.mesh.extraData
+  const { color } = program
+  const c = new THREE.EllipseCurve(
+    0,
+    0,
+    chipConfig.radius + 1,
+    chipConfig.len / 2 + 1,
+    (3 / 2) * Math.PI,
+    (1 / 2) * Math.PI,
+    false,
+    0
+  )
+  const points = c.getPoints(36)
+  // 旋转成体
+  const geometry = new THREE.LatheGeometry(points, 36, 0, Math.PI * 2)
+  // const geometry = new THREE.SphereGeometry(chipConfig.len / 2 + 0.5, 16, 16)
+  // 性能提升重中之重，构建BVH树
+  geometry.computeBoundsTree()
+  geometry.computeBoundingBox()
+  // 计算包围盒，方便射线检测
+  // mesh
+  const mesh = new THREE.Mesh(geometry, getElectricMaterial(color))
+  mesh.position.set(center.x, center.y, center.z)
+  // !旋转后检测就不对了，后面再看吧
+  // 矫正方向
+  mesh.quaternion.copy(quaternion)
+  mesh.geometry.boundingBox.applyMatrix4(mesh.matrixWorld)
+  // mesh.visible = false
+  return mesh
+}
+
+export const updateChipMaterial = (chip, program) => {
+  const { color, node } = program
+  const actualColor = color === '' ? '#27386f' : color
+  chip.status = node
+  chip.mesh.material.color = new THREE.Color(actualColor)
 }

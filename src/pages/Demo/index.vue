@@ -33,6 +33,7 @@ onMounted(() => {
       leads.forEach(lead => {
         addMesh(lead.pole)
         addMeshes(lead.chips.map(v => v.mesh))
+        addMeshes(lead.chips.map(v => v.electric))
       })
       leadList.value = leads
     })
@@ -67,6 +68,7 @@ onMounted(() => {
   position: fixed;
   width: 100vw;
   height: 100vh;
+  user-select: none;
 }
 .small-scene {
   position: absolute;

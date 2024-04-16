@@ -1,9 +1,11 @@
 import { loadFile } from '@/libs/loaders'
-import { renderPole, renderCircleChips } from '@/libs/renderLead'
+import { renderPole, renderCircleChips, renderElectric, updateChipMaterial } from '@/libs/renderLead'
+
 import { leadParams } from '@/libs/leadParams'
 let leads = {}
 let leadConfig = []
 let leadProgram = []
+
 const leadUrl = '../../../assets/optionalModels/leads/lead.json'
 const testPatientConfig = {
   leftChannel: {
@@ -33,16 +35,16 @@ const testProgram = {
       nodes: [
         {
           index: 0,
-          node: 0,
-          color: '',
+          node: 1,
+          color: '#845EC2',
           amplitude: 0,
           width: 0,
           rate: 0,
         },
         {
           index: 1,
-          node: 0,
-          color: '',
+          node: 1,
+          color: '#F3C5FF',
           amplitude: 0,
           width: 0,
           rate: 0,
@@ -50,21 +52,21 @@ const testProgram = {
         {
           index: 4,
           node: 0,
-          color: '',
+          color: '#00C9A7',
           amplitude: 0,
           width: 0,
           rate: 0,
         },
         {
           index: 5,
-          node: 0,
-          color: '',
+          node: 1,
+          color: '#FEFEDF',
           amplitude: 0,
           width: 0,
           rate: 0,
         },
       ],
-      display: true,
+      display: 1,
       position: 2,
     },
   ],
@@ -89,16 +91,16 @@ const testProgram = {
         },
         {
           index: 6,
-          node: 0,
-          color: '',
+          node: 1,
+          color: '#845EC2',
           amplitude: 0,
           width: 0,
           rate: 0,
         },
         {
           index: 7,
-          node: 0,
-          color: '',
+          node: 2,
+          color: '#D65DB1',
           amplitude: 0,
           width: 0,
           rate: 0,
@@ -106,7 +108,7 @@ const testProgram = {
         {
           index: 8,
           node: 0,
-          color: '',
+          color: '#FF6F91',
           amplitude: 0,
           width: 0,
           rate: 0,
@@ -114,15 +116,15 @@ const testProgram = {
         {
           index: 9,
           node: 0,
-          color: '',
+          color: '#FF9671',
           amplitude: 0,
           width: 0,
           rate: 0,
         },
         {
           index: 10,
-          node: 0,
-          color: '',
+          node: 2,
+          color: '#FFC75F',
           amplitude: 0,
           width: 0,
           rate: 0,
@@ -130,40 +132,16 @@ const testProgram = {
         {
           index: 11,
           node: 0,
-          color: '',
+          color: '#F9F871',
           amplitude: 0,
           width: 0,
           rate: 0,
         },
       ],
-      display: true,
+      display: 1,
       position: 1,
     },
   ],
-}
-
-const createLead = leadName => {
-  const lead = {
-    leadName,
-    leadPoints: [],
-    pole: null,
-    chips: [],
-    electrics: [],
-  }
-  leads[leadName] = lead
-}
-
-const createChip = (lead, chips) => {
-  const arr = chips.map(v => {
-    return {
-      name: 'c_' + v.name,
-      text: '触点' + v.name,
-      mesh: v,
-      status: 0,
-      index: v.name,
-    }
-  })
-  lead.chips = arr
 }
 
 /**将PAD传递的参数转换为3D实际需要的参数 */
@@ -202,6 +180,7 @@ const adjustLeadConfig = patientConfig => {
 
 /**将channel的结构转换为扁平的数组结构 */
 const adjustLeadProgram = programs => {
+  leadProgram = []
   const { leftChannel, rightChannel } = programs
   leadProgram.push(...leftChannel, ...rightChannel)
   console.log('载体传递的程控程序', leadProgram)
@@ -209,6 +188,7 @@ const adjustLeadProgram = programs => {
 
 // 读取json文件的坐标数组
 const handleChipStep_1 = () => {
+  leads = []
   const url = new URL(leadUrl, import.meta.url).href
   return new Promise((resolve, reject) => {
     loadFile(url)
@@ -219,7 +199,13 @@ const handleChipStep_1 = () => {
           const leadIndex = v.label.split('_')[0]
           const leadName = leadIndex
           if (!leads[leadName]) {
-            createLead(leadName)
+            const lead = {
+              leadName,
+              leadPoints: [],
+              pole: null,
+              chips: [],
+            }
+            leads[leadName] = lead
           }
           leads[leadName].leadPoints.push(v.position)
         })
@@ -246,12 +232,26 @@ const handleChipStep_3 = (patientConfig, programs) => {
   Object.values(leads).forEach(lead => {
     const target = leadConfig.find(v => v.leadName === lead.leadName)
     // 根据target的position去找对应的程控程序
-    const program = leadProgram.find(v => v.position === target.position)
+    const programs = leadProgram.find(v => v.position === target.position)
     if (target) {
-      const chips = renderCircleChips(lead.leadPoints, target.config, program)
-      createChip(lead, chips)
+      const chips = renderCircleChips(lead.leadPoints, target.config, programs)
+      const arr = chips.map((v, index) => {
+        const program = programs.nodes[index]
+        const obj = {
+          name: 'c_' + v.name,
+          text: '触点' + v.name,
+          mesh: v,
+          index: program.index,
+          status: 0,
+          config: target.config,
+          electric: null,
+        }
+        return obj
+      })
+      lead.chips = arr
     }
   })
+  updateChips(programs)
 }
 
 /**
@@ -270,5 +270,49 @@ export const useChips = fileUrl => {
         resolve(leadList)
       })
       .catch(reject)
+  })
+}
+
+const clearElectric = () => {
+  // 先将所有的电场清除
+  leads.forEach(v => {
+    const { chips } = v
+    chips.forEach(k => {
+      if (k.material) {
+        k.material.dispose()
+      }
+      if (k.geometry) {
+        k.geometry.dispose()
+      }
+      k = null
+    })
+  })
+}
+
+/**根据Program更新电极片和电场的显示 */
+export const updateChips = programs => {
+  clearElectric()
+  adjustLeadProgram(programs)
+  leadProgram.forEach(v => {
+    const { nodes, display, position } = v
+    if (display === 1) {
+      // 根据leadConfig寻找leadName
+      const { leadName } = leadConfig.find(v => v.position === position)
+      if (leadName) {
+        // 根据leadName寻找正确的电极片
+        const { chips } = leads.find(v => v.leadName === leadName)
+        // 根据Nodes的配置更新电极片
+        nodes.forEach(v => {
+          const { index, node } = v
+          // 根据Index寻找对应的电极片
+          const targetChip = chips.find(v => v.index === index)
+          updateChipMaterial(targetChip, v)
+          if (node !== 0) {
+            const electric = renderElectric(targetChip, v)
+            targetChip.electric = electric
+          }
+        })
+      }
+    }
   })
 }
