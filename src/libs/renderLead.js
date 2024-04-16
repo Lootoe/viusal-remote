@@ -118,7 +118,7 @@ const createChipMaterial = (width, height, text, fontSize) => {
   })
 }
 
-export const renderCircleChips = (points, chipConfig, position) => {
+export const renderCircleChips = (points, chipConfig, program) => {
   // 将三维数组转换为vector3
   const vectors = points.map(v => {
     const v3 = new THREE.Vector3(Number(v[0]), Number(v[1]), Number(v[2]))
@@ -152,12 +152,12 @@ export const renderCircleChips = (points, chipConfig, position) => {
     // 计算包围盒，加速射线检测
     geometry.computeBoundingBox()
     // 为电极定义额外数据
-    const num = position * chipConfig.number + index
-    const name = `c_${num}`
+    const { nodes } = program
+    const num = nodes[index].index
     const extraData = {
       // 带电状态0(不带电),1(正电),2(负电)
       status: 0,
-      name: name,
+      name: num,
     }
     // mesh
     // 贴图的高度需要根据chipConfig来调整，防止文字被压扁
