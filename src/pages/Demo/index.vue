@@ -2,8 +2,10 @@
 import useScene from './hooks/useScene'
 import { useNucleus, changeNucleusColor, changeNucleusVisible } from './hooks/useNucleus'
 import { useChips } from './hooks/useChips'
+
 let nucleusMeshes = []
 let nucleusList = ref([])
+
 onMounted(() => {
   let sceneManager
   useScene('.main-scene', '.small-scene', { backgroundColor: '#232A3B' })
@@ -24,8 +26,12 @@ onMounted(() => {
       return useChips()
     })
     .then(leads => {
+      console.log('最终渲染的电极列表', leads)
       Object.values(leads).forEach(lead => {
-        sceneManager.scene.add(lead.mesh)
+        sceneManager.scene.add(lead.pole)
+        lead.chips.forEach(v => {
+          sceneManager.scene.add(v)
+        })
       })
     })
     .catch(err => {

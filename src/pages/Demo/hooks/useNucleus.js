@@ -189,7 +189,7 @@ export const changeNucleusColor = (...args) => {
 export const changeNucleusVisible = (...args) => {
   const [nucleus, side] = args
   nucleusList[nucleus.factor].visible = nucleus.visible
-  const targetMesh = nucleusMeshes.find(v => v.factor === nucleus.factor)
+  const targetMesh = nucleusMeshes.find(v => v.factor === nucleus.factor && v.side === side)
   if (targetMesh) {
     targetMesh.mesh.visible = nucleus.visible[side]
   }
