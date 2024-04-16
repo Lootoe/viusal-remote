@@ -1,5 +1,4 @@
 <script setup>
-import { watch } from 'vue'
 defineOptions({
   name: 'traverseManager',
 })
@@ -13,8 +12,9 @@ const props = defineProps({
     required: true,
   },
 })
-const localNucleusList = ref([])
-const localLeadList = ref([])
+const emits = defineEmits(['traverse', 'reset'])
+const localNucleusList = shallowRef([])
+const localLeadList = shallowRef([])
 watch(
   () => props.nucleusList,
   newv => {
@@ -59,7 +59,10 @@ watch(
 const isSingle = ref(true)
 // 是否有选中项
 const hasSeleced = ref(false)
-
+// 弹框是否收起
+const showModal = ref(true)
+// 是否展示重置按钮
+const showReset = ref(false)
 const selectItem = item => {
   item.selected = !item.selected
   // 判断有没有选中项
@@ -69,7 +72,7 @@ const selectItem = item => {
   hasSeleced.value = selectedNum > 0
   isSingle.value = selectedNum <= 1
 }
-const resetAll = () => {
+const reselect = () => {
   localNucleusList.value.forEach(v => {
     v.selected = false
   })
@@ -79,11 +82,24 @@ const resetAll = () => {
   isSingle.value = true
   hasSeleced.value = false
 }
+const traverse = type => {
+  // 从列表里筛选出已选中的item
+  const arr_1 = localLeadList.value.filter(v => v.selected).map(v => v.factor)
+  const arr_2 = localNucleusList.value.filter(v => v.selected).map(v => v.factor)
+  const arr = [...arr_1, ...arr_2]
+  showModal.value = false
+  showReset.value = true
+  emits('traverse', type, arr)
+}
+const reset = () => {
+  showReset.value = false
+  emits('reset')
+}
 </script>
 
 <template>
   <div class="traverse-manager">
-    <div class="content-box">
+    <div class="content-box" v-show="showModal">
       <div class="top">
         <div class="top__inner">
           <div class="section">
@@ -118,20 +134,29 @@ const resetAll = () => {
       </div>
       <div class="bottom" :class="{ active: hasSeleced }">
         <div class="bottom__left">
-          <div class="btn" @click="resetAll">重选</div>
+          <div class="btn" @click="reselect">重选</div>
         </div>
         <div class="bottom__right">
           <template v-if="isSingle">
-            <div class="btn">确定</div>
+            <div class="btn" @click="traverse('confirm')">确定</div>
           </template>
           <template v-else>
-            <div class="btn">交集</div>
-            <div class="btn">并集</div>
+            <div class="btn" @click="traverse('cross')">交集</div>
+            <div class="btn" @click="traverse('append')">并集</div>
           </template>
         </div>
       </div>
     </div>
-    <div class="btn-box"></div>
+    <div class="btn-box">
+      <div class="btn-toggle" @click="showModal = !showModal">
+        <img src="@/assets/img/arrow.png" :class="{ down: !showModal }" />
+        <div class="btn__text">神经纤维</div>
+      </div>
+      <div class="btn-reset" v-show="showReset" @click="reset">
+        <img src="@/assets/img/reset.png" />
+        <div class="btn__text">重置</div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -244,6 +269,49 @@ const resetAll = () => {
     }
   }
   .btn-box {
+    margin-top: 0.2rem;
+    display: flex;
+    align-items: center;
+    .btn-toggle {
+      height: 0.6rem;
+      padding: 0 0.2rem;
+      border-radius: 0.08rem;
+      color: rgba(113, 176, 184, 1);
+      font-size: 0.22rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: rgba(51, 61, 80, 1);
+      border: 0.01rem solid rgba(103, 110, 125, 1);
+      cursor: pointer;
+      user-select: none;
+      margin-right: 0.22rem;
+      box-sizing: border-box;
+      img {
+        width: 0.24rem;
+        margin-right: 0.12rem;
+        &.down {
+          transform: rotateX(180deg) !important;
+        }
+      }
+    }
+    .btn-reset {
+      height: 0.6rem;
+      padding: 0 0.2rem;
+      border-radius: 0.08rem;
+      color: #fff;
+      font-size: 0.22rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: rgba(122, 192, 199, 1);
+      cursor: pointer;
+      user-select: none;
+      img {
+        width: 0.3rem;
+        margin-right: 0.12rem;
+      }
+    }
   }
 }
 </style>

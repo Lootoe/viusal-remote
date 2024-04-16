@@ -7,6 +7,12 @@ let nucleusList = ref([])
 let nucleusMeshes = shallowRef([])
 let leadList = shallowRef([])
 
+const resetFibers = (...args) => {
+  console.log('args', args)
+}
+const traverseFibers = (...args) => {
+  console.log('args', args)
+}
 onMounted(() => {
   useScene('.main-scene', '.small-scene', { backgroundColor: '#232A3B' })
     .then(() => {
@@ -44,7 +50,13 @@ onMounted(() => {
       @colorChanged="changeNucleusColor"
       @visibleChanged="changeNucleusVisible"
     ></nucleus-manager>
-    <traverse-manager class="traverse-manager" :nucleusList="nucleusMeshes" :leadList="leadList"></traverse-manager>
+    <traverse-manager
+      class="traverse-manager"
+      :nucleusList="nucleusMeshes"
+      :leadList="leadList"
+      @reset="resetFibers"
+      @traverse="traverseFibers"
+    ></traverse-manager>
     <change-side class="change-side" @changeSide="changeCameraSide"></change-side>
     <div class="small-scene"></div>
   </div>
