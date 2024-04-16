@@ -1,15 +1,20 @@
 import { renderMainScene, renderSmallScene, renderSmallHead } from '@/libs/renderScene'
 
+let mainSceneManager, smallSceneManager
+
 /** 同步主视图和辅视图的旋转 */
-export const syncSceneRotate = (mainControls, mainCamera, assistCamera, assistScreenDistance) => {
+export const syncSceneRotate = () => {
   // 根据摄像头旋转的角度，实时计算右上角人头的旋转
-  mainControls.addEventListener('change', () => {
-    changeHeadSide(mainCamera, assistCamera, assistScreenDistance)
+  mainSceneManager.controls.addEventListener('change', () => {
+    changeHeadSide(mainSceneManager.camera, smallSceneManager.camera, smallSceneManager.config.screenDistance)
   })
 }
 
 /**根据主场景切换辅场景的摄像机 */
-export const changeHeadSide = (mainCamera, assistCamera, assistScreenDistance) => {
+export const changeHeadSide = () => {
+  const mainCamera = mainSceneManager.camera
+  const assistCamera = smallSceneManager.camera
+  const assistScreenDistance = smallSceneManager.config.screenDistance
   const rotation = mainCamera.rotation
   const position = mainCamera.position
   const positionNormal = position.clone().normalize().multiplyScalar(assistScreenDistance)
@@ -22,9 +27,33 @@ export const changeHeadSide = (mainCamera, assistCamera, assistScreenDistance) =
   assistCamera.position.x = positionNormal.x
 }
 
-export default (mainSelector, smallSelector, config) => {
+/**切换摄像机相对核团的面向 */
+export const changeCameraSide = params => {
+  const { vector, rotation } = params
+  const { camera, controls, config } = mainSceneManager
+  camera.position.set(
+    vector[0] * config.screenDistance,
+    vector[1] * config.screenDistance,
+    vector[2] * config.screenDistance
+  )
+  // !修改camera的LookAt无用，因为camera被controls托管了，需要修改controls的target
+  controls.target.x = rotation.x
+  controls.target.y = rotation.y
+  controls.target.z = rotation.z
+}
+
+export const addMesh = mesh => {
+  mainSceneManager.scene.add(mesh)
+}
+
+export const addMeshes = meshArr => {
+  meshArr.forEach(mesh => {
+    mainSceneManager.scene.add(mesh)
+  })
+}
+
+export const useScene = (mainSelector, smallSelector, config) => {
   return new Promise((resolve, reject) => {
-    let mainSceneManager, smallSceneManager
     try {
       mainSceneManager = renderMainScene(mainSelector, config)
       mainSceneManager.anim()
@@ -36,9 +65,8 @@ export default (mainSelector, smallSelector, config) => {
       // loadBrainMask().then(brainMask => {
       //   mainSceneManager.scene.add(brainMask)
       // })
-      const { controls, camera } = mainSceneManager
-      syncSceneRotate(controls, camera, smallSceneManager.camera, smallSceneManager.config.screenDistance)
-      resolve(mainSceneManager)
+      syncSceneRotate()
+      resolve()
     } catch (error) {
       reject(error)
     }

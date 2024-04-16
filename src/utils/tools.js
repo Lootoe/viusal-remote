@@ -13,3 +13,8 @@ export const isDev = () => {
 export const isProd = () => {
   return import.meta.env.PROD
 }
+
+/**加载图片 */
+export const loadImg = url => {
+  return new URL(`../assets/img/${url}`, import.meta.url).href
+}

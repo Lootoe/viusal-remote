@@ -1,5 +1,5 @@
 <script setup>
-import useScene from './hooks/useScene'
+import { useScene, changeCameraSide, addMesh, addMeshes } from './hooks/useScene'
 import { useNucleus, changeNucleusColor, changeNucleusVisible } from './hooks/useNucleus'
 import { useChips } from './hooks/useChips'
 
@@ -7,10 +7,8 @@ let nucleusMeshes = []
 let nucleusList = ref([])
 
 onMounted(() => {
-  let sceneManager
   useScene('.main-scene', '.small-scene', { backgroundColor: '#232A3B' })
-    .then(data => {
-      sceneManager = data
+    .then(() => {
       return useNucleus()
     })
     .then(data => {
@@ -18,9 +16,7 @@ onMounted(() => {
       console.log('用于显示的核团列表', data.nucleusList)
       nucleusMeshes = data.nucleusMeshes
       console.log('用于追踪的核团列表', nucleusMeshes)
-      Object.values(nucleusMeshes).forEach(item => {
-        sceneManager.scene.add(item.mesh)
-      })
+      addMeshes(Object.values(nucleusMeshes).map(v => v.mesh))
     })
     .then(() => {
       return useChips()
@@ -28,10 +24,8 @@ onMounted(() => {
     .then(leads => {
       console.log('最终渲染的电极列表', leads)
       Object.values(leads).forEach(lead => {
-        sceneManager.scene.add(lead.pole)
-        lead.chips.forEach(v => {
-          sceneManager.scene.add(v)
-        })
+        addMesh(lead.pole)
+        addMeshes(lead.chips)
       })
     })
     .catch(err => {
@@ -49,6 +43,7 @@ onMounted(() => {
       @visibleChanged="changeNucleusVisible"
     ></nucleus-manager>
     <traverse-manager class="traverse-manager" :nucleusList="nucleusMeshes"></traverse-manager>
+    <change-side class="change-side" @changeSide="changeCameraSide"></change-side>
     <div class="small-scene"></div>
   </div>
 </template>
@@ -63,8 +58,8 @@ onMounted(() => {
   position: absolute;
   top: 0.16rem;
   right: 0.16rem;
-  width: 1.66rem;
-  height: 1.66rem;
+  width: 2rem;
+  height: 2rem;
 }
 .nucleus-manager {
   position: absolute;
@@ -75,5 +70,10 @@ onMounted(() => {
   position: absolute;
   bottom: 0.36rem;
   left: 0.36rem;
+}
+.change-side {
+  position: absolute;
+  bottom: 0.36rem;
+  right: 0.36rem;
 }
 </style>
