@@ -42,7 +42,10 @@ const renderFiber = vectors => {
 
   const line = new Line2(geometry, matLine)
   line.computeLineDistances()
-  return line
+  return {
+    mesh: line,
+    matrix: vectors,
+  }
 }
 
 export const renderFibers = (affineUrl, fiberUrlList) => {
@@ -56,7 +59,6 @@ export const renderFibers = (affineUrl, fiberUrlList) => {
             arr.forEach(fibers => {
               fibers.forEach(v => {
                 const fiber = renderFiber(v)
-                fiber.visible = false
                 results.push(fiber)
               })
             })
@@ -65,5 +67,44 @@ export const renderFibers = (affineUrl, fiberUrlList) => {
           .catch(reject)
       })
       .catch(reject)
+  })
+}
+
+export const traverseFibers = (models, fiberPool) => {
+  const intersectSuccess = (raycaster, mesh, point) => {
+    const direction = new THREE.Vector3(0, -1, -1)
+    raycaster.set(point, direction)
+    const intersects = raycaster.intersectObject(mesh)
+    const success = intersects.length && direction.dot(intersects[0].face.normal) > 0
+    return success
+  }
+  return new Promise(resolve => {
+    const raycaster = new THREE.Raycaster()
+    raycaster.firstHitOnly = true
+    models.forEach(model => {
+      const { mesh, startFromFibers, crossedFibers, endWithFibers } = model
+      mesh.updateWorldMatrix(true, true)
+      fiberPool.forEach((fiber, index) => {
+        // 计算每个核团都有哪些神经纤维经过
+        for (let i = 0; i < fiber.matrix.length; i++) {
+          const point = fiber.matrix[i]
+          if (intersectSuccess(raycaster, mesh, point)) {
+            crossedFibers.push(index)
+            break
+          }
+        }
+        // 计算每个核团都包含了哪些纤维的起始点
+        const pointStart = fiber.matrix[0]
+        if (intersectSuccess(raycaster, mesh, pointStart)) {
+          startFromFibers.push(index)
+        }
+        // 计算每个核团都包含了哪些纤维的结束点
+        const pointEnd = fiber.matrix[fiber.matrix.length - 1]
+        if (intersectSuccess(raycaster, mesh, pointEnd)) {
+          endWithFibers.push(index)
+        }
+      })
+    })
+    resolve()
   })
 }

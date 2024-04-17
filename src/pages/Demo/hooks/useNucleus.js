@@ -144,9 +144,6 @@ const handleNucleusStep_2 = (nucleusStep1List = []) => {
         text: source.text,
         side: side,
         mesh: null,
-        crossedFibers: [],
-        startFromFibers: [],
-        endWithFibers: [],
       }
       nucleusMeshes.push(model)
     }

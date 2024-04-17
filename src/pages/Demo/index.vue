@@ -3,15 +3,33 @@ import { useScene, changeCameraSide, addMesh, addMeshes, destoryScene } from './
 import { useNucleus, changeNucleusColor, changeNucleusVisible } from './hooks/useNucleus'
 import { useChips } from './hooks/useChips'
 import { useFibers } from './hooks/useFibers'
+import { getAssets } from '@/utils/tools'
+
+const tempAffineUrl = getAssets('optionalModels/matrix/affine.txt')
+const tempFiberUrls = [getAssets('optionalModels/fiber/Lead_l.txt'), getAssets('optionalModels/fiber/Lead_r.txt')]
+
 let nucleusList = ref([])
 let nucleusMeshes = shallowRef([])
 let leadList = shallowRef([])
 
-const resetFibers = (...args) => {
-  console.log('args', args)
+const { initFibers, getAllFibers, hideAllFibers, analyseTraverse } = useFibers()
+
+const resetFibers = () => {
+  hideAllFibers()
 }
 const traverseFibers = (...args) => {
-  console.log('args', args)
+  const [type, arr] = args
+  let source = ''
+  if (type === 'confirm') {
+    source = arr[0]
+  }
+  if (type === 'cross') {
+    source = arr.join('&')
+  }
+  if (type === 'append') {
+    source = arr.join('|')
+  }
+  analyseTraverse(source)
 }
 onMounted(() => {
   useScene('.main-scene', '.small-scene', { backgroundColor: '#232A3B' })
@@ -38,8 +56,15 @@ onMounted(() => {
       leadList.value = leads
     })
     .then(() => {
-      useFibers().then(fiberPool => {
-        addMeshes(fiberPool)
+      const arr_1 = nucleusMeshes.value
+      const arr_2 = leadList.value.map(v => v.chips).flat()
+      const traverseArr = arr_1.concat(arr_2)
+      initFibers({
+        affineUrl: tempAffineUrl,
+        fiberUrlList: tempFiberUrls,
+        traverseArr: traverseArr,
+      }).then(() => {
+        addMeshes(getAllFibers())
       })
     })
     .catch(err => {

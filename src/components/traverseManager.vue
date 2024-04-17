@@ -24,7 +24,6 @@ watch(
       const prefix = v.side === 'left' ? 'L-' : 'R-'
       const obj = {
         name: v.name,
-        factor: prefix + v.factor,
         text: prefix + v.text,
         selected: false,
       }
@@ -46,7 +45,6 @@ watch(
     localLeadList.value = arr.map(v => {
       return {
         name: v.name,
-        factor: v.name,
         text: v.text,
         selected: false,
       }
@@ -84,8 +82,8 @@ const reselect = () => {
 }
 const traverse = type => {
   // 从列表里筛选出已选中的item
-  const arr_1 = localLeadList.value.filter(v => v.selected).map(v => v.factor)
-  const arr_2 = localNucleusList.value.filter(v => v.selected).map(v => v.factor)
+  const arr_1 = localLeadList.value.filter(v => v.selected).map(v => v.name)
+  const arr_2 = localNucleusList.value.filter(v => v.selected).map(v => v.name)
   const arr = [...arr_1, ...arr_2]
   showModal.value = false
   showReset.value = true
