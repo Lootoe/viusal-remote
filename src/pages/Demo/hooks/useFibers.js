@@ -48,7 +48,6 @@ export default () => {
             addModel(v)
           })
           traverseFibers(models, fiberPool)
-          console.log('模型追踪的结果', models)
         })
         .then(resolve)
         .catch(reject)
