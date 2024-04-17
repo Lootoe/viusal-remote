@@ -18,3 +18,7 @@ export const isProd = () => {
 export const loadImg = url => {
   return new URL(`../assets/img/${url}`, import.meta.url).href
 }
+
+export const getAssets = url => {
+  return new URL(`../assets/${url}`, import.meta.url).href
+}

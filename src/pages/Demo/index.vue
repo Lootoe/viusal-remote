@@ -1,8 +1,8 @@
 <script setup>
-import { useScene, changeCameraSide, addMesh, addMeshes } from './hooks/useScene'
+import { useScene, changeCameraSide, addMesh, addMeshes, destoryScene } from './hooks/useScene'
 import { useNucleus, changeNucleusColor, changeNucleusVisible } from './hooks/useNucleus'
 import { useChips } from './hooks/useChips'
-
+import { useFibers } from './hooks/useFibers'
 let nucleusList = ref([])
 let nucleusMeshes = shallowRef([])
 let leadList = shallowRef([])
@@ -37,12 +37,19 @@ onMounted(() => {
       })
       leadList.value = leads
     })
+    .then(() => {
+      useFibers().then(fiberPool => {
+        addMeshes(fiberPool)
+      })
+    })
     .catch(err => {
       console.log('err', err)
     })
 })
+onBeforeUnmount(() => {
+  destoryScene()
+})
 </script>
-
 <template>
   <div class="main-scene">
     <nucleus-manager

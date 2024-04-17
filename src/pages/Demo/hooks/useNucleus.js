@@ -1,15 +1,16 @@
 import * as THREE from 'three'
 import { renderNucleus } from '@/libs/renderNucleus'
+import { getAssets } from '@/utils/tools'
 
 const urlList = [
-  '../../../assets/optionalModels/nucleus/Left-Caudate.ply',
-  '../../../assets/optionalModels/nucleus/Left-Lenticula.ply',
-  '../../../assets/optionalModels/nucleus/Left-NAc.ply',
-  '../../../assets/optionalModels/nucleus/Left-ALIC.ply',
-  '../../../assets/optionalModels/nucleus/Right-Caudate.ply',
-  '../../../assets/optionalModels/nucleus/Right-Lenticula.ply',
-  '../../../assets/optionalModels/nucleus/Right-NAc.ply',
-  '../../../assets/optionalModels/nucleus/Right-ALIC.ply',
+  getAssets('optionalModels/nucleus/Left-Caudate.ply'),
+  getAssets('optionalModels/nucleus/Left-Lenticula.ply'),
+  getAssets('optionalModels/nucleus/Left-NAc.ply'),
+  getAssets('optionalModels/nucleus/Left-ALIC.ply'),
+  getAssets('optionalModels/nucleus/Right-Caudate.ply'),
+  getAssets('optionalModels/nucleus/Right-Lenticula.ply'),
+  getAssets('optionalModels/nucleus/Right-NAc.ply'),
+  getAssets('optionalModels/nucleus/Right-ALIC.ply'),
 ]
 
 const nucleusEnum = {

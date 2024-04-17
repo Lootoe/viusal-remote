@@ -74,3 +74,8 @@ export const useScene = (mainSelector, smallSelector, config) => {
     }
   })
 }
+
+export const destoryScene = () => {
+  mainSceneManager.destory()
+  smallSceneManager.destory()
+}

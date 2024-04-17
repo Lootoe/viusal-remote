@@ -3,8 +3,6 @@ import { loadPLY } from '@/libs/loaders'
 
 export const renderNucleus = async (url, color, alpha) => {
   const geometry = await loadPLY(url)
-  //   const { color, visible } = nucleusList[factor]
-  //   const { pureColor, alpha } = splitRGBA(color)
   const material = new THREE.MeshPhysicalMaterial({
     emissive: color,
     transparent: true,

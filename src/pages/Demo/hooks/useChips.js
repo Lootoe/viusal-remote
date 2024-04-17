@@ -1,12 +1,13 @@
 import { loadFile } from '@/libs/loaders'
 import { renderPole, renderCircleChips, renderElectric, updateChipMaterial } from '@/libs/renderLead'
-
 import { leadParams } from '@/libs/leadParams'
+import { getAssets } from '@/utils/tools'
+
 let leads = {}
 let leadConfig = []
 let leadProgram = []
 
-const leadUrl = '../../../assets/optionalModels/leads/lead.json'
+const leadUrl = getAssets('optionalModels/leads/lead.json')
 const testPatientConfig = {
   leftChannel: {
     implantList: [
