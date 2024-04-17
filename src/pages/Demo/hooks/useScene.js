@@ -1,17 +1,8 @@
 import { renderMainScene, renderSmallScene, renderSmallHead } from '@/libs/renderScene'
 
-let mainSceneManager, smallSceneManager
-
-/** 同步主视图和辅视图的旋转 */
-export const syncSceneRotate = () => {
-  // 根据摄像头旋转的角度，实时计算右上角人头的旋转
-  mainSceneManager.controls.addEventListener('change', () => {
-    changeHeadSide(mainSceneManager.camera, smallSceneManager.camera, smallSceneManager.config.screenDistance)
-  })
-}
-
 /**根据主场景切换辅场景的摄像机 */
-export const changeHeadSide = () => {
+const changeHeadSide = info => {
+  let { mainSceneManager, smallSceneManager } = info
   const mainCamera = mainSceneManager.camera
   const assistCamera = smallSceneManager.camera
   const assistScreenDistance = smallSceneManager.config.screenDistance
@@ -27,55 +18,78 @@ export const changeHeadSide = () => {
   assistCamera.position.x = positionNormal.x
 }
 
-/**切换摄像机相对核团的面向 */
-export const changeCameraSide = params => {
-  const { vector, rotation } = params
-  const { camera, controls, config } = mainSceneManager
-  camera.position.set(
-    vector[0] * config.screenDistance,
-    vector[1] * config.screenDistance,
-    vector[2] * config.screenDistance
-  )
-  // !修改camera的LookAt无用，因为camera被controls托管了，需要修改controls的target
-  controls.target.x = rotation.x
-  controls.target.y = rotation.y
-  controls.target.z = rotation.z
+/** 同步主视图和辅视图的旋转 */
+const syncSceneRotate = info => {
+  let { mainSceneManager } = info
+  // 根据摄像头旋转的角度，实时计算右上角人头的旋转
+  mainSceneManager.controls.addEventListener('change', () => {
+    changeHeadSide(info)
+  })
 }
 
-export const addMesh = mesh => {
-  if (mesh) {
-    mainSceneManager.scene.add(mesh)
+export default () => {
+  const info = {
+    mainSceneManager: null,
+    smallSceneManager: null,
   }
-}
 
-export const addMeshes = meshArr => {
-  meshArr.forEach(mesh => {
-    addMesh(mesh)
-  })
-}
+  const initScene = ({ mainSelector, smallSelector, config }) => {
+    return new Promise((resolve, reject) => {
+      try {
+        info.mainSceneManager = renderMainScene(mainSelector, config)
+        info.mainSceneManager.anim()
+        info.smallSceneManager = renderSmallScene(smallSelector)
+        info.smallSceneManager.anim()
+        renderSmallHead().then(headMesh => {
+          info.smallSceneManager.scene.add(headMesh)
+        })
+        // loadBrainMask().then(brainMask => {
+        //   mainSceneManager.scene.add(brainMask)
+        // })
+        syncSceneRotate(info)
+        resolve()
+      } catch (error) {
+        reject(error)
+      }
+    })
+  }
 
-export const useScene = (mainSelector, smallSelector, config) => {
-  return new Promise((resolve, reject) => {
-    try {
-      mainSceneManager = renderMainScene(mainSelector, config)
-      mainSceneManager.anim()
-      smallSceneManager = renderSmallScene(smallSelector)
-      smallSceneManager.anim()
-      renderSmallHead().then(headMesh => {
-        smallSceneManager.scene.add(headMesh)
-      })
-      // loadBrainMask().then(brainMask => {
-      //   mainSceneManager.scene.add(brainMask)
-      // })
-      syncSceneRotate()
-      resolve()
-    } catch (error) {
-      reject(error)
+  /**切换摄像机相对核团的面向 */
+  const changeCameraSide = params => {
+    let { mainSceneManager } = info
+    const { vector, rotation } = params
+    const { camera, controls, config } = mainSceneManager
+    camera.position.set(
+      vector[0] * config.screenDistance,
+      vector[1] * config.screenDistance,
+      vector[2] * config.screenDistance
+    )
+    // *修改camera的LookAt无用，因为camera被controls托管了，需要修改controls的target
+    controls.target.x = rotation.x
+    controls.target.y = rotation.y
+    controls.target.z = rotation.z
+  }
+
+  const addMesh = mesh => {
+    let { mainSceneManager } = info
+    if (mesh) {
+      mainSceneManager.scene.add(mesh)
     }
-  })
-}
+  }
 
-export const destoryScene = () => {
-  mainSceneManager.destory()
-  smallSceneManager.destory()
+  const addMeshes = meshArr => {
+    meshArr.forEach(mesh => {
+      addMesh(mesh)
+    })
+  }
+
+  const destoryScene = () => {
+    let { mainSceneManager, smallSceneManager } = info
+    mainSceneManager.destory()
+    smallSceneManager.destory()
+    mainSceneManager = null
+    smallSceneManager = null
+  }
+
+  return { initScene, changeCameraSide, addMeshes, addMesh, destoryScene }
 }

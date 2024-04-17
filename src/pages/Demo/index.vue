@@ -1,5 +1,5 @@
 <script setup>
-import { useScene, changeCameraSide, addMesh, addMeshes, destoryScene } from './hooks/useScene'
+import useScene from './hooks/useScene'
 import useNucleus from './hooks/useNucleus'
 import useChips from './hooks/useChips'
 import useFibers from './hooks/useFibers'
@@ -162,6 +162,7 @@ let leadList = shallowRef([])
 const { initFibers, getAllFibers, hideAllFibers, analyseTraverse } = useFibers()
 const { initChips, updateChips } = useChips()
 const { initNucleus, changeNucleusVisible, changeNucleusColor } = useNucleus()
+const { initScene, changeCameraSide, addMeshes, addMesh, destoryScene } = useScene()
 
 const resetFibers = () => {
   hideAllFibers()
@@ -180,8 +181,9 @@ const traverseFibers = (...args) => {
   }
   analyseTraverse(source)
 }
+
 onMounted(() => {
-  useScene('.main-scene', '.small-scene', { backgroundColor: '#232A3B' })
+  initScene({ mainSelector: '.main-scene', smallSelector: '.small-scene', config: { backgroundColor: '#232A3B' } })
     .then(() => {
       return initNucleus({ urlList: tempUrlList }).then(data => {
         nucleusList.value = data.nucleusList
@@ -216,7 +218,7 @@ onMounted(() => {
           }
         })
       const traverseArr = arr_1.concat(arr_2)
-      initFibers({
+      return initFibers({
         affineUrl: tempAffineUrl,
         fiberUrlList: tempFiberUrls,
         traverseArr: traverseArr,
