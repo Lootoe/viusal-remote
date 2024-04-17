@@ -158,6 +158,9 @@ const tempUrlList = [
 let nucleusList = ref([])
 let nucleusMeshes = shallowRef([])
 let leadList = shallowRef([])
+let loadingText = ref('加载中')
+let loading = ref(true)
+let hasTraversed = ref(false)
 
 const { initFibers, getAllFibers, hideAllFibers, analyseTraverse } = useFibers()
 const { initChips, updateChips } = useChips()
@@ -167,22 +170,63 @@ const { initScene, changeCameraSide, addMeshes, addMesh, destoryScene } = useSce
 const resetFibers = () => {
   hideAllFibers()
 }
-const traverseFibers = (...args) => {
-  const [type, arr] = args
-  let source = ''
-  if (type === 'confirm') {
-    source = arr[0]
-  }
-  if (type === 'cross') {
-    source = arr.join('&')
-  }
-  if (type === 'append') {
-    source = arr.join('|')
-  }
-  analyseTraverse(source)
+
+const traverseFibers = () => {
+  return new Promise((resolve, reject) => {
+    if (hasTraversed.value === false) {
+      loading.value = true
+      const arr_1 = nucleusMeshes.value
+      const arr_2 = leadList.value
+        .map(v => v.chips)
+        .flat()
+        .map(v => {
+          return {
+            name: v.name,
+            mesh: v.electric,
+          }
+        })
+      const traverseArr = arr_1.concat(arr_2)
+      initFibers({
+        affineUrl: tempAffineUrl,
+        fiberUrlList: tempFiberUrls,
+        traverseArr: traverseArr,
+      })
+        .then(() => {
+          addMeshes(getAllFibers())
+          loading.value = false
+          hasTraversed.value = true
+          resolve()
+        })
+        .catch(reject)
+    } else {
+      loading.value = true
+      setTimeout(() => {
+        resolve()
+        loading.value = false
+      }, 500)
+    }
+  })
+}
+
+const traverse = (...args) => {
+  traverseFibers().then(() => {
+    const [type, arr] = args
+    let source = ''
+    if (type === 'confirm') {
+      source = arr[0]
+    }
+    if (type === 'cross') {
+      source = arr.join('&')
+    }
+    if (type === 'append') {
+      source = arr.join('|')
+    }
+    analyseTraverse(source)
+  })
 }
 
 onMounted(() => {
+  loading.value = true
   initScene({ mainSelector: '.main-scene', smallSelector: '.small-scene', config: { backgroundColor: '#232A3B' } })
     .then(() => {
       return initNucleus({ urlList: tempUrlList }).then(data => {
@@ -207,49 +251,40 @@ onMounted(() => {
       )
     })
     .then(() => {
-      const arr_1 = nucleusMeshes.value
-      const arr_2 = leadList.value
-        .map(v => v.chips)
-        .flat()
-        .map(v => {
-          return {
-            name: v.name,
-            mesh: v.electric,
-          }
-        })
-      const traverseArr = arr_1.concat(arr_2)
-      return initFibers({
-        affineUrl: tempAffineUrl,
-        fiberUrlList: tempFiberUrls,
-        traverseArr: traverseArr,
-      }).then(() => {
-        addMeshes(getAllFibers())
-      })
+      setTimeout(() => {
+        loading.value = false
+      }, 500)
     })
     .catch(err => {
       console.log('err', err)
     })
 })
+
 onBeforeUnmount(() => {
   destoryScene()
 })
 </script>
+
 <template>
   <div class="main-scene">
+    <easy-spinner :text="loadingText" v-show="loading"></easy-spinner>
     <nucleus-manager
       class="nucleus-manager"
       :nucleusList="nucleusList"
       @colorChanged="changeNucleusColor"
       @visibleChanged="changeNucleusVisible"
     ></nucleus-manager>
+
     <traverse-manager
       class="traverse-manager"
       :nucleusList="nucleusMeshes"
       :leadList="leadList"
       @reset="resetFibers"
-      @traverse="traverseFibers"
+      @traverse="traverse"
     ></traverse-manager>
+
     <change-side class="change-side" @changeSide="changeCameraSide"></change-side>
+
     <div class="small-scene"></div>
   </div>
 </template>
