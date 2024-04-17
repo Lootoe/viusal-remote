@@ -1,7 +1,7 @@
 import { renderFibers } from '@/libs/renderFiber'
 import { analyse, traverseFibers } from '@/libs/traverseAnalyse'
 
-export const useFibers = () => {
+export default () => {
   let fiberPool = []
   let models = []
 
