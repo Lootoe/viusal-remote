@@ -62,6 +62,7 @@ export const useFibers = () => {
   }
 
   const analyseTraverse = source => {
+    hideAllFibers()
     const arr = analyse(source, models, fiberPool)
     arr.forEach(v => {
       fiberPool[v].mesh.visible = true
