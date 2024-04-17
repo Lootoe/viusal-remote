@@ -43,12 +43,14 @@ export const changeCameraSide = params => {
 }
 
 export const addMesh = mesh => {
-  mainSceneManager.scene.add(mesh)
+  if (mesh) {
+    mainSceneManager.scene.add(mesh)
+  }
 }
 
 export const addMeshes = meshArr => {
   meshArr.forEach(mesh => {
-    mainSceneManager.scene.add(mesh)
+    addMesh(mesh)
   })
 }
 
