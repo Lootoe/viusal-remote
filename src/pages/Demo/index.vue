@@ -3,11 +3,10 @@ import useScene from './hooks/useScene'
 import useNucleus from './hooks/useNucleus'
 import useChips from './hooks/useChips'
 import useFibers from './hooks/useFibers'
-import { getAssets } from '@/utils/tools'
 
-const tempAffineUrl = getAssets('optionalModels/matrix/affine.txt')
-const tempFiberUrls = [getAssets('optionalModels/fiber/Lead_l.txt'), getAssets('optionalModels/fiber/Lead_r.txt')]
-const tempLeadUrl = getAssets('optionalModels/leads/lead.json')
+const tempAffineUrl = 'optionalModels/matrix/affine.txt'
+const tempFiberUrls = ['optionalModels/fiber/Lead_l.txt', 'optionalModels/fiber/Lead_r.txt']
+const tempLeadUrl = 'optionalModels/leads/lead.json'
 const tempPatientConfig = {
   leftChannel: {
     implantList: [
@@ -145,14 +144,14 @@ const tempProgram = {
   ],
 }
 const tempUrlList = [
-  getAssets('optionalModels/nucleus/Left-Caudate.ply'),
-  getAssets('optionalModels/nucleus/Left-Lenticula.ply'),
-  getAssets('optionalModels/nucleus/Left-NAc.ply'),
-  getAssets('optionalModels/nucleus/Left-ALIC.ply'),
-  getAssets('optionalModels/nucleus/Right-Caudate.ply'),
-  getAssets('optionalModels/nucleus/Right-Lenticula.ply'),
-  getAssets('optionalModels/nucleus/Right-NAc.ply'),
-  getAssets('optionalModels/nucleus/Right-ALIC.ply'),
+  'optionalModels/nucleus/Left-Caudate.ply',
+  'optionalModels/nucleus/Left-Lenticula.ply',
+  'optionalModels/nucleus/Left-NAc.ply',
+  'optionalModels/nucleus/Left-ALIC.ply',
+  'optionalModels/nucleus/Right-Caudate.ply',
+  'optionalModels/nucleus/Right-Lenticula.ply',
+  'optionalModels/nucleus/Right-NAc.ply',
+  'optionalModels/nucleus/Right-ALIC.ply',
 ]
 
 let nucleusList = ref([])

@@ -1,31 +1,16 @@
 import { resolve } from 'path'
 import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import AutoImport from 'unplugin-auto-import/vite'
-import Components from 'unplugin-vue-components/vite'
-import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
+import { mode, platform } from './config/env.js'
+import { getPlugins } from './config/plugins.js'
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(() => {
   console.log('------------------')
   console.log(mode)
+  console.log(platform)
   console.log('------------------')
   return defineConfig({
     base: './',
-    plugins: [
-      vue(),
-      AutoImport({
-        imports: ['vue', 'vue-router', 'pinia', '@vueuse/core'],
-        eslintrc: {
-          enabled: true,
-          filepath: './.eslintrc-auto-import.json',
-          globalsPropValue: true,
-        },
-        resolvers: NaiveUiResolver(),
-      }),
-      Components({
-        resolvers: NaiveUiResolver(),
-      }),
-    ],
+    plugins: getPlugins(mode, platform),
     resolve: {
       alias: {
         '@': resolve(__dirname, 'src'),

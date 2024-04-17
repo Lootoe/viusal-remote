@@ -49,9 +49,8 @@ const adjustLeadProgram = (info, patientProgram) => {
 // 读取电极的坐标数组
 const handleChipStep_1 = (leadUrl, info) => {
   const { leads } = info
-  const url = new URL(leadUrl, import.meta.url).href
   return new Promise((resolve, reject) => {
-    loadFile(url)
+    loadFile(leadUrl)
       .then(data => {
         const obj = JSON.parse(data)
         const controlPoints = obj?.markups[0].controlPoints

@@ -142,10 +142,9 @@ const handleNucleusStep_3 = (nucleusStep1List, info) => {
   return new Promise((resolve, reject) => {
     const requests = nucleusStep1List.map(obj => {
       const { factor, url } = obj
-      const nucleausUrl = new URL(url, import.meta.url).href
       const { color } = nucleusList[factor]
       const { pure, alpha } = splitRGBA(color)
-      return renderNucleus(nucleausUrl, pure, alpha)
+      return renderNucleus(url, pure, alpha)
     })
     Promise.all(requests)
       .then(arr => {

@@ -49,7 +49,7 @@ const brainMaskMaterial = new THREE.ShaderMaterial({
 })
 
 export const loadBrainMask = async () => {
-  const branMaskUrl = new URL('../../../assets/model/eddy_mask.ply', import.meta.url).href
+  const branMaskUrl = 'eddy_mask.ply'
   const branMask = await loadPLY(branMaskUrl)
   const mesh = new THREE.Mesh(branMask, brainMaskMaterial)
   mesh.rotation.x = Math.PI / -2
@@ -276,7 +276,7 @@ export const renderSmallScene = selector => {
 }
 
 export const renderSmallHead = async () => {
-  const headUrl = new URL('../assets/model/head.obj', import.meta.url).href
+  const headUrl = 'head.obj'
   const headObj = await loadOBJ(headUrl)
   const material = new THREE.MeshLambertMaterial({ color: 0xffffff })
   const mesh = new THREE.Mesh(headObj, material)
