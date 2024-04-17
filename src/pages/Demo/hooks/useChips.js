@@ -308,9 +308,10 @@ export const updateChips = programs => {
           // 根据Index寻找对应的电极片
           const targetChip = chips.find(v => v.index === index)
           updateChipMaterial(targetChip, v)
-          if (node !== 0) {
-            const electric = renderElectric(targetChip, v)
-            targetChip.electric = electric
+          const electric = renderElectric(targetChip, v)
+          targetChip.electric = electric
+          if (node === 0) {
+            electric.visible = false
           }
         })
       }

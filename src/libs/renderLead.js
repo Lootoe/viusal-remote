@@ -216,36 +216,50 @@ export const renderCircleChips = (points, chipConfig, program) => {
   return chipArr
 }
 
+// !存在追踪问题，暂时不用椭球
+// export const renderElectric = (chip, program) => {
+//   const chipConfig = chip.config
+//   const { center, quaternion } = chip.mesh.extraData
+//   const { color } = program
+//   const c = new THREE.EllipseCurve(
+//     0,
+//     0,
+//     chipConfig.radius + 1,
+//     chipConfig.len / 2 + 1,
+//     (3 / 2) * Math.PI,
+//     (1 / 2) * Math.PI,
+//     false,
+//     0
+//   )
+//   const points = c.getPoints(36)
+//   旋转成体
+//   const geometry = new THREE.LatheGeometry(points, 36, 0, Math.PI * 2)
+//   // 性能提升重中之重，构建BVH树
+//   geometry.computeBoundsTree()
+//   // 计算包围盒，方便射线检测
+//   geometry.computeBoundingBox()
+//   // mesh
+//   const mesh = new THREE.Mesh(geometry, getElectricMaterial(color))
+//   mesh.position.set(center.x, center.y, center.z)
+//   // !旋转后检测就不对了，后面再看吧
+//   // 矫正方向
+//   mesh.quaternion.copy(quaternion)
+//   mesh.geometry.boundingBox.applyMatrix4(mesh.matrixWorld)
+//   mesh.visible = false
+//   return mesh
+// }
+
 export const renderElectric = (chip, program) => {
   const chipConfig = chip.config
-  const { center, quaternion } = chip.mesh.extraData
+  const { center } = chip.mesh.extraData
   const { color } = program
-  const c = new THREE.EllipseCurve(
-    0,
-    0,
-    chipConfig.radius + 1,
-    chipConfig.len / 2 + 1,
-    (3 / 2) * Math.PI,
-    (1 / 2) * Math.PI,
-    false,
-    0
-  )
-  const points = c.getPoints(36)
-  // 旋转成体
-  const geometry = new THREE.LatheGeometry(points, 36, 0, Math.PI * 2)
-  // const geometry = new THREE.SphereGeometry(chipConfig.len / 2 + 0.5, 16, 16)
+  const geometry = new THREE.SphereGeometry(chipConfig.len / 2 + 1, 16, 16)
   // 性能提升重中之重，构建BVH树
   geometry.computeBoundsTree()
-  geometry.computeBoundingBox()
   // 计算包围盒，方便射线检测
-  // mesh
+  geometry.computeBoundingBox()
   const mesh = new THREE.Mesh(geometry, getElectricMaterial(color))
   mesh.position.set(center.x, center.y, center.z)
-  // !旋转后检测就不对了，后面再看吧
-  // 矫正方向
-  mesh.quaternion.copy(quaternion)
-  mesh.geometry.boundingBox.applyMatrix4(mesh.matrixWorld)
-  // mesh.visible = false
   return mesh
 }
 

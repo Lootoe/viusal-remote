@@ -91,6 +91,7 @@ const traverse = type => {
 }
 const reset = () => {
   showReset.value = false
+  reselect()
   emits('reset')
 }
 </script>

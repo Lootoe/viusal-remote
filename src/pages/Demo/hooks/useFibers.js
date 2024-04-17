@@ -1,5 +1,5 @@
-import { renderFibers, traverseFibers } from '@/libs/renderFiber'
-import { analyse } from '@/libs/traverseAnalyse'
+import { renderFibers } from '@/libs/renderFiber'
+import { analyse, traverseFibers } from '@/libs/traverseAnalyse'
 
 export const useFibers = () => {
   let fiberPool = []
@@ -48,7 +48,7 @@ export const useFibers = () => {
             addModel(v)
           })
           traverseFibers(models, fiberPool)
-          console.log('每个模型追踪的结果', models)
+          console.log('模型追踪的结果', models)
         })
         .then(resolve)
         .catch(reject)

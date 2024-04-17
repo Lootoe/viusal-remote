@@ -57,7 +57,15 @@ onMounted(() => {
     })
     .then(() => {
       const arr_1 = nucleusMeshes.value
-      const arr_2 = leadList.value.map(v => v.chips).flat()
+      const arr_2 = leadList.value
+        .map(v => v.chips)
+        .flat()
+        .map(v => {
+          return {
+            name: v.name,
+            mesh: v.electric,
+          }
+        })
       const traverseArr = arr_1.concat(arr_2)
       initFibers({
         affineUrl: tempAffineUrl,

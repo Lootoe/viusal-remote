@@ -1,3 +1,5 @@
+import * as THREE from 'three'
+
 /**将!\$\^表示的核团全都替换成变量表示 */
 const compileStep_1 = (info, genId) => {
   const { dataMap, operateStack } = info
@@ -110,4 +112,46 @@ export const analyse = (source, models, fiberPool) => {
   compileStep_3(info, fiberPool)
   console.log('info', info)
   return info.dataMap[info.operateStr.trim()].crossedFibers
+}
+
+export const traverseFibers = (models, fiberPool) => {
+  const intersectSuccess = (raycaster, mesh, point) => {
+    const direction = new THREE.Vector3(0, -1, -1)
+    raycaster.set(point, direction)
+    const intersects = raycaster.intersectObject(mesh)
+    const success = intersects.length && direction.dot(intersects[0].face.normal) > 0
+    return success
+  }
+  return new Promise(resolve => {
+    const raycaster = new THREE.Raycaster()
+    raycaster.firstHitOnly = true
+    models.forEach(model => {
+      const { mesh, startFromFibers, crossedFibers, endWithFibers } = model
+      /**电场可能为空，那些模型就不需要追踪 */
+      if (mesh) {
+        mesh.updateWorldMatrix(true, true)
+        fiberPool.forEach((fiber, index) => {
+          // 计算每个核团都有哪些神经纤维经过
+          for (let i = 0; i < fiber.matrix.length; i++) {
+            const point = fiber.matrix[i]
+            if (intersectSuccess(raycaster, mesh, point)) {
+              crossedFibers.push(index)
+              break
+            }
+          }
+          // 计算每个核团都包含了哪些纤维的起始点
+          const pointStart = fiber.matrix[0]
+          if (intersectSuccess(raycaster, mesh, pointStart)) {
+            startFromFibers.push(index)
+          }
+          // 计算每个核团都包含了哪些纤维的结束点
+          const pointEnd = fiber.matrix[fiber.matrix.length - 1]
+          if (intersectSuccess(raycaster, mesh, pointEnd)) {
+            endWithFibers.push(index)
+          }
+        })
+      }
+    })
+    resolve()
+  })
 }
