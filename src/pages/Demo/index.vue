@@ -1,6 +1,6 @@
 <script setup>
 import { useScene, changeCameraSide, addMesh, addMeshes, destoryScene } from './hooks/useScene'
-import { useNucleus, changeNucleusColor, changeNucleusVisible } from './hooks/useNucleus'
+import useNucleus from './hooks/useNucleus'
 import useChips from './hooks/useChips'
 import useFibers from './hooks/useFibers'
 import { getAssets } from '@/utils/tools'
@@ -144,6 +144,16 @@ const tempProgram = {
     },
   ],
 }
+const tempUrlList = [
+  getAssets('optionalModels/nucleus/Left-Caudate.ply'),
+  getAssets('optionalModels/nucleus/Left-Lenticula.ply'),
+  getAssets('optionalModels/nucleus/Left-NAc.ply'),
+  getAssets('optionalModels/nucleus/Left-ALIC.ply'),
+  getAssets('optionalModels/nucleus/Right-Caudate.ply'),
+  getAssets('optionalModels/nucleus/Right-Lenticula.ply'),
+  getAssets('optionalModels/nucleus/Right-NAc.ply'),
+  getAssets('optionalModels/nucleus/Right-ALIC.ply'),
+]
 
 let nucleusList = ref([])
 let nucleusMeshes = shallowRef([])
@@ -151,6 +161,7 @@ let leadList = shallowRef([])
 
 const { initFibers, getAllFibers, hideAllFibers, analyseTraverse } = useFibers()
 const { initChips, updateChips } = useChips()
+const { initNucleus, changeNucleusVisible, changeNucleusColor } = useNucleus()
 
 const resetFibers = () => {
   hideAllFibers()
@@ -172,7 +183,7 @@ const traverseFibers = (...args) => {
 onMounted(() => {
   useScene('.main-scene', '.small-scene', { backgroundColor: '#232A3B' })
     .then(() => {
-      return useNucleus().then(data => {
+      return initNucleus({ urlList: tempUrlList }).then(data => {
         nucleusList.value = data.nucleusList
         console.log('用于显示的核团列表', data.nucleusList)
         nucleusMeshes.value = data.nucleusMeshes

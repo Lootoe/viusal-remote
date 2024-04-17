@@ -1,17 +1,5 @@
 import * as THREE from 'three'
 import { renderNucleus } from '@/libs/renderNucleus'
-import { getAssets } from '@/utils/tools'
-
-const urlList = [
-  getAssets('optionalModels/nucleus/Left-Caudate.ply'),
-  getAssets('optionalModels/nucleus/Left-Lenticula.ply'),
-  getAssets('optionalModels/nucleus/Left-NAc.ply'),
-  getAssets('optionalModels/nucleus/Left-ALIC.ply'),
-  getAssets('optionalModels/nucleus/Right-Caudate.ply'),
-  getAssets('optionalModels/nucleus/Right-Lenticula.ply'),
-  getAssets('optionalModels/nucleus/Right-NAc.ply'),
-  getAssets('optionalModels/nucleus/Right-ALIC.ply'),
-]
 
 const nucleusEnum = {
   GPi: {
@@ -97,9 +85,6 @@ const nucleusEnum = {
   },
 }
 
-let nucleusMeshes = []
-let nucleusList = {}
-
 const splitRGBA = color => {
   // 提取单纯的RGB和Alpha
   // 因为emissive不支持alpha，需要设置opacity
@@ -110,11 +95,11 @@ const splitRGBA = color => {
   G = arr[1]
   B = arr[2]
   const alpha = arr[4] ? `${arr[3]}.${arr[4]}` : `${arr[3]}`
-  return { pureColor: `rgb(${R},${G},${B})`, alpha }
+  return { pure: `rgb(${R},${G},${B})`, alpha }
 }
 
 /**将URL拆分成`name`和`url` */
-const handleNucleusStep_1 = (urlList = []) => {
+const handleNucleusStep_1 = urlList => {
   return urlList.map(url => {
     // 取最后的名称
     const strs_1 = url.split('/')
@@ -130,7 +115,8 @@ const handleNucleusStep_1 = (urlList = []) => {
 }
 
 /**设置在Enum里命中的核团，并且在meshes里开辟空间 */
-const handleNucleusStep_2 = (nucleusStep1List = []) => {
+const handleNucleusStep_2 = (nucleusStep1List, info) => {
+  const { nucleusMeshes, nucleusList } = info
   const keys = Object.keys(nucleusEnum)
   nucleusStep1List.forEach(obj => {
     const { factor, name, side } = obj
@@ -151,14 +137,15 @@ const handleNucleusStep_2 = (nucleusStep1List = []) => {
 }
 
 /**加载Ply模型，并在meshes中设置 */
-const handleNucleusStep_3 = (nucleusStep1List = []) => {
+const handleNucleusStep_3 = (nucleusStep1List, info) => {
+  const { nucleusMeshes, nucleusList } = info
   return new Promise((resolve, reject) => {
     const requests = nucleusStep1List.map(obj => {
       const { factor, url } = obj
       const nucleausUrl = new URL(url, import.meta.url).href
       const { color } = nucleusList[factor]
-      const { pureColor, alpha } = splitRGBA(color)
-      return renderNucleus(nucleausUrl, pureColor, alpha)
+      const { pure, alpha } = splitRGBA(color)
+      return renderNucleus(nucleausUrl, pure, alpha)
     })
     Promise.all(requests)
       .then(arr => {
@@ -173,32 +160,41 @@ const handleNucleusStep_3 = (nucleusStep1List = []) => {
   })
 }
 
-export const changeNucleusColor = (...args) => {
-  const [nucleus, color] = args
-  nucleusList[nucleus.factor].color = color
-  const targets = nucleusMeshes.filter(v => v.factor === nucleus.factor)
-  targets.forEach(v => {
-    const { pureColor, alpha } = splitRGBA(color)
-    v.mesh.material.emissive = new THREE.Color(pureColor)
-    v.mesh.material.opacity = alpha
-  })
-}
-
-export const changeNucleusVisible = (...args) => {
-  const [nucleus, side] = args
-  nucleusList[nucleus.factor].visible = nucleus.visible
-  const targetMesh = nucleusMeshes.find(v => v.factor === nucleus.factor && v.side === side)
-  if (targetMesh) {
-    targetMesh.mesh.visible = nucleus.visible[side]
+export default () => {
+  const info = {
+    nucleusMeshes: [],
+    nucleusList: {},
   }
-}
 
-export const useNucleus = () => {
-  return new Promise((resolve, reject) => {
-    nucleusMeshes = []
-    nucleusList = {}
-    const step1List = handleNucleusStep_1(urlList)
-    handleNucleusStep_2(step1List)
-    handleNucleusStep_3(step1List).then(resolve).catch(reject)
-  })
+  const initNucleus = ({ urlList }) => {
+    return new Promise((resolve, reject) => {
+      const step1List = handleNucleusStep_1(urlList)
+      handleNucleusStep_2(step1List, info)
+      handleNucleusStep_3(step1List, info).then(resolve).catch(reject)
+    })
+  }
+
+  const changeNucleusVisible = (...args) => {
+    const { nucleusList, nucleusMeshes } = info
+    const [nucleus, side] = args
+    nucleusList[nucleus.factor].visible = nucleus.visible
+    const targetMesh = nucleusMeshes.find(v => v.factor === nucleus.factor && v.side === side)
+    if (targetMesh) {
+      targetMesh.mesh.visible = nucleus.visible[side]
+    }
+  }
+
+  const changeNucleusColor = (...args) => {
+    const { nucleusList, nucleusMeshes } = info
+    const [nucleus, color] = args
+    nucleusList[nucleus.factor].color = color
+    const targets = nucleusMeshes.filter(v => v.factor === nucleus.factor)
+    targets.forEach(v => {
+      const { pure, alpha } = splitRGBA(color)
+      v.mesh.material.emissive = new THREE.Color(pure)
+      v.mesh.material.opacity = alpha
+    })
+  }
+
+  return { initNucleus, changeNucleusVisible, changeNucleusColor }
 }
